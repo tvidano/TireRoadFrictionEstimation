@@ -1,0 +1,56 @@
+% Unscented KF Main --> using Nonlinear Battery Model
+
+clear; close all; clc; 
+
+load 'IV_data_nonlinear.mat'; 
+load('OCV_table.mat');
+
+%% Set Up
+
+% Share copies of these constants amongst all functions
+global Q R R0 del_t Cbat
+
+global soc_intpts_OCV OCV_intpts
+
+del_t = 0.1;   % sampling time, s
+Rc = 0.015;
+Cc = 2400;
+Cbat = 5 * 3600;
+R0 = 0.01;
+tauc = Rc*Cc;
+
+% Initial conditions / distributions
+Q = 2.5E-7;  % process noise variance
+R = 1E-4;    % sensor noice variance
+SOC(1) = 1;  % initial value of SoC
+OL(1) = SOC(1);  % open loop estimate, initial
+Vc(1) = 0;
+
+% since initial SoC is a known value, it is its own mean and var = 0
+P_soc(1) = 0; 
+N = 1;
+
+%% Implement UKF
+
+for k = 1:1:length(t)
+    % model prediction step
+    j = k - 1;
+    [xk,pk] = ukf_pred(N,SOC(j),P_soc(j),I(j));
+    
+    % Get measurement yk
+    Vck = exp(-del_t/tauc)*Vc(j) + Rc*(1-exp(-del_t/tauc))*I(j);
+    yk = V(k) + Vck;
+    
+    % measurement update step
+    [SOC(k),P_soc(k)] = ukf_upd(N,xk,pk,I(j),yk);
+    
+end
+
+%% Plots
+
+figure 
+plot(t,SOC_act);
+hold on
+plot(t, SOC);
+xlabel('time');
+ylabel('');
