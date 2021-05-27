@@ -1,0 +1,305 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage[margin=1in,footskip=0.25in]{geometry}
+\setlength{\belowcaptionskip}{-15pt}
+\setlength{\abovedisplayskip}{0pt}%
+\setlength{\belowdisplayskip}{0pt}%
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{indentfirst}
+\usepackage{mathtools} 
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{blindtext}
+\usepackage{placeins}
+\usepackage{amsmath}
+\usepackage{eqparbox}
+\usepackage{arydshln,leftidx,mathtools}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usetikzlibrary{scopes}
+\usetikzlibrary{shapes,arrows,decorations.markings,plotmarks}
+\usepackage[american]{circuitikz}
+\usepackage{float}
+\usepackage{steinmetz}
+\usepackage{bondgraphs}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{gensymb}
+\usepackage[english]{babel}
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\usepackage{booktabs}
+\usepackage{ulem}
+\usepackage{sectsty}
+\usepackage{tcolorbox}
+\usepackage{siunitx}
+\usepackage{xspace}
+\usepackage{titling}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{pdfpages} 
+\usepackage{textcomp}
+\usepackage{xparse}
+\usepackage{upquote}
+\pgfplotsset{width=10cm,compat=1.9}
+
+\def\doubleunderline#1{\underline{\underline{#1}}}
+\newcounter{MyCounter}
+\newcommand{\MATLAB}{\textsc{Matlab}\xspace}
+\graphicspath{G:\UC Davis\4 Senior\Spring Quarter 2021\MAE 298\Project (Model)}
+
+\ExplSyntaxOn
+\RenewDocumentCommand{\texttt}{m}
+ {
+  \tl_set:Nn \l_nemgathos_upquotes_tl { #1 }
+  \tl_replace_all:Nnn \l_nemgathos_upquotes_tl { '' } { \textquotedbl }
+  \tl_replace_all:Nnn \l_nemgathos_upquotes_tl { `` } { \textquotedbl }
+  \tl_replace_all:Nnn \l_nemgathos_upquotes_tl { ' } { \textquotesingle }
+  \tl_replace_all:Nnn \l_nemgathos_upquotes_tl { ` } { \textquotesingle }
+  { \ttfamily \tl_use:N \l_nemgathos_upquotes_tl }
+ }
+\tl_new:N \l_nemgathos_upquotes_tl
+\ExplSyntaxOff
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Yihui Li}
+\lhead{MAE 298 Project EKF}
+\cfoot{Page \thepage}
+
+\renewcommand\maketitlehooka{\null\mbox{}\vfill}
+\renewcommand\maketitlehookd{\vfill\null}
+
+\tikzstyle{block} = [draw, fill=white, rectangle, 
+    minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=white, circle, node distance=1cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-,thin,black}]
+\tikzset{mynode/.style={draw,text width=2.90cm,align=center}}
+
+\title{MAE 298}
+\author{Yihui Li}
+\date{\today}
+
+\begin{document}
+\setcounter{page}{1}
+% EKF
+\subsection*{The continuous-time EKF}
+The system equations are given as: ($x = [U \quad \omega \quad \mu_{\max}]^\mathrm{T}$)
+\begin{equation*}
+\begin{dcases}
+F_x (U,\omega,\mu_{\max}) = \mu_{\max} F_z \sin\left\{C\arctan\left[B(1-E)s+E\arctan\left(Bs\right)\right]\right\} \\
+s = \frac{r_e \omega}{U} - 1
+\end{dcases}
+\end{equation*}
+\begin{equation*}
+\left[
+\begin{array}{c}
+\dot{U} \\~\\
+\dot{\omega} \\~\\
+\dot{\mu}_{\max}
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+\displaystyle \frac{F_x (U,\omega,\mu_{\max}) }{m/4} \\~\\
+\displaystyle \frac{T-r_e F_x (U,\omega,\mu_{\max}) }{J} \\~\\
+0
+\end{array}
+\right]
+=
+f (U,\omega,\mu_{\max}) 
+\end{equation*}
+\par
+Then, for this continuous-time system at the current state estimate $\hat{x}$, we can have:
+\begin{equation*}
+\mathbf{A} = \left.\frac{\partial f_i}{\partial x_j}\right|_{\hat{x}} =
+\left[
+\begin{array}{ccc}
+\mathbf{A}_{11} & \mathbf{A}_{12} & \mathbf{A}_{13} \\
+\mathbf{A}_{21} & \mathbf{A}_{22} & \mathbf{A}_{23} \\
+0 & 0 & 0
+\end{array}
+\right]
+\end{equation*}
+\begin{equation*}
+\mathbf{B} = \left.\frac{\partial f_i}{\partial u_j}\right|_{\hat{x}} =
+\left[
+\begin{array}{c}
+0 \\
+1/J \\
+0
+\end{array}
+\right]
+\end{equation*}
+\begin{center}
+where
+\end{center}
+\begin{equation*}
+\mathbf{A}_{11} = \frac{4 C F_z \hat{\mu}_{\max}}{m} \left\{\frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e  \left[E\hat{\omega} \arctan\left(B\hat{s}\right)- \hat{\omega}\right]+\frac{B^2 E r_e\hat{\omega} \hat{s}}{B^2 {\hat{s}}^2+1}\right]}{\hat{U}^2\left(\hat{t}^2+1\right)}\right\}
+\end{equation*}
+\begin{equation*}
+\mathbf{A}_{12} = - \frac{4 C F_z \hat{\mu}_{\max}}{m} \left\{\frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e \left[ E \arctan\left(B \hat{s} \right)-1 \right]+\frac{B^2 E r_e \hat{s}}{B^2{\hat{s}}^2+1}\right]}{U\left(\hat{t}^2+1\right)}\right\}
+\end{equation*}
+\begin{equation*}
+\mathbf{A}_{13} = \frac{4F_x (\hat{U},\hat{\omega},1)}{m}
+\end{equation*}
+\begin{equation*}
+\mathbf{A}_{21} = - \frac{C F_z r_e \hat{\mu}_{\max}}{J}\left\{\frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e  \left[E\hat{\omega} \arctan\left(B\hat{s}\right)- \hat{\omega}\right]+\frac{B^2 E r_e\hat{\omega} \hat{s}}{B^2 {\hat{s}}^2+1}\right]}{\hat{U}^2\left(\hat{t}^2+1\right)}\right\}
+\end{equation*}
+\begin{equation*}
+\mathbf{A}_{22} = \frac{C F_z r_e \hat{\mu}_{\max}}{J} \left\{\frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e \left[ E \arctan\left(B \hat{s} \right)-1 \right]+\frac{B^2 E r_e \hat{s}}{B^2{\hat{s}}^2+1}\right]}{U\left(\hat{t}^2+1\right)}\right\}
+\end{equation*}
+\begin{equation*}
+\mathbf{A}_{23} = \frac{-r_e F_x (\hat{U},\hat{\omega},1) }{J}
+\end{equation*}
+\par
+$\hat{s}$ and $\hat{t}$ are defined as:
+\begin{equation*}
+\hat{s} = \frac{r_e\hat{\omega}}{\hat{U}}-1
+\end{equation*}
+\begin{equation*}
+\hat{t} = B\hat{s}-BE\arctan\left(B\hat{s}\right)\hat{s}
+\end{equation*}
+\newpage
+Then, since the outputs to be measured are the wheel angular velocity and longitudinal velocity, this means the matrix $\mathbf{C}$ and $\mathbf{D}$ will be:
+\begin{equation*}
+\mathbf{C} = \left.\frac{\partial h_i}{\partial x_j}\right|_{\hat{x}} =
+\left[
+\begin{array}{ccc}
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{array}
+\right]
+\end{equation*}
+\begin{equation*}
+\mathbf{D} = \left.\frac{\partial h_i}{\partial u_j}\right|_{\hat{x}} =
+\left[
+\begin{array}{c}
+0 \\
+0
+\end{array}
+\right]
+\end{equation*}
+\subsection*{The discrete-time EKF}
+With the expressions acquired above, we can rewrite the matrix $\mathbf{A}$ into:
+\begin{equation*}
+\mathbf{A} = 
+\left[
+\begin{array}{ccc}
+\alpha \gamma \delta & -\alpha \gamma \varepsilon & \alpha \eta \\
+\beta \gamma \delta & -\beta \gamma \varepsilon & \beta \eta \\
+0 & 0 & 0
+\end{array}
+\right]
+\end{equation*}
+\begin{center}
+where
+\end{center}
+\begin{equation*}
+\begin{dcases}
+\alpha =  \frac{4}{m}\\
+\beta = \frac{-r_e}{J}\\
+\gamma = C F_z \hat{\mu}_{\max}\\
+\delta = \frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e  \left[E\hat{\omega} \arctan\left(B\hat{s}\right)- \hat{\omega}\right]+\frac{B^2 E r_e\hat{\omega} \hat{s}}{B^2 {\hat{s}}^2+1}\right]}{\hat{U}^2\left(\hat{t}^2+1\right)}\\
+\varepsilon = \frac{\cos\left[C\arctan\left(\hat{t}\right)\right]\left[B r_e \left[ E \arctan\left(B \hat{s} \right)-1 \right]+\frac{B^2 E r_e \hat{s}}{B^2{\hat{s}}^2+1}\right]}{U\left(\hat{t}^2+1\right)}\\
+\eta = F_x (\hat{U},\hat{\omega},1) 
+\end{dcases}
+\end{equation*}
+\par
+With this form, we can easily determine the eigenvalues of $\mathbf{A}$ as:
+\begin{equation*}
+\lambda_1 = 0,\quad \lambda_2 = 0, \quad \lambda_3 = \gamma\left(\alpha \delta - \beta \varepsilon\right)
+\end{equation*}
+\par
+Also, the eigenvectors are:
+\begin{equation*}
+\mathbf{v}_1 = 
+\left[
+\begin{array}{c}
+\varepsilon/\delta \\
+1 \\
+0
+\end{array}
+\right]
+, \quad \mathbf{v}_2 = 
+\left[
+\begin{array}{c}
+-\eta/(\gamma\delta) \\
+0 \\
+1
+\end{array}
+\right]
+, \quad \mathbf{v}_3 = 
+\left[
+\begin{array}{c}
+\alpha/\beta \\
+1 \\
+0
+\end{array}
+\right]
+\end{equation*}
+\par
+Then, we can acquire discrete-time version of $\mathbf{A}$ as: ($T_s$ is the sampling time)
+\begin{align*}
+\mathbf{F} & = e^{\mathbf{A}T_s} = U e^{\Lambda T_s} U^{-1} \\
+&= \frac{1}{\gamma\left(\alpha\delta-\beta\varepsilon\right)}
+\left[\begin{array}{ccc} 
+\gamma\left[\alpha\delta e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)}-\beta\varepsilon\right] & \alpha\gamma\varepsilon\left[ 1 -  e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)} \right] & - \beta\gamma\eta\left[1 -  e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)} \right]\\[\medskipamount] 
+ - \beta\gamma\delta\left[1 -  e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)} \right] & \gamma\left[\alpha\delta -\beta\varepsilon e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)}\right] & - \alpha\gamma\eta\left[1 -  e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)} \right]\\[\medskipamount]  
+0 & 0 & \gamma\left(\alpha\delta-\beta\varepsilon\right) 
+\end{array}\right]
+\end{align*}
+\newpage
+Furthermore, we can acquire discrete-time version of $\mathbf{B}$ and $\mathbf{C}$ as: 
+\begin{align*}
+\mathbf{G} &=  \left[\int_{0}^{T_s} \mathrm{e}^{\mathbf{A}\tau}\, d\tau\right] \mathbf{B} \\
+&= \frac{1}{ J \gamma^2 \left(\alpha\delta-\beta\varepsilon\right)^2}
+\left[\begin{array}{c} 
+\alpha\gamma\varepsilon\left[ \gamma \left(\alpha\delta-\beta\varepsilon\right) T_s + 1 -  e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)} \right] \\
+\gamma\left[\alpha \gamma \delta \left(\alpha\delta-\beta\varepsilon\right) T_s  + \beta\varepsilon - \beta\varepsilon e^{\gamma T_s \left(\alpha\delta-\beta\varepsilon\right)}\right] \\
+0
+\end{array}\right]
+\end{align*} 
+\begin{equation*}
+\mathbf{H} = \mathbf{C} = 
+\left[
+\begin{array}{ccc}
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{array}
+\right]
+\end{equation*}
+\subsection*{Observability \& Detectability}
+The observability matrix is defined as:
+\begin{equation*}
+\mathcal {O}=
+\begin{bmatrix}
+\mathbf{C}\\ \mathbf{C}\mathbf{F}\\ \mathbf{C}\mathbf{F}^{2}\\\vdots \\ \mathbf{C}\mathbf{F}^{n-1}
+\end{bmatrix}
+\end{equation*}
+\par
+Since $n=3$, we can have the observability matrix as: (for simplicity, we only notate the elements in the matrix $\mathbf{F}$ as $\mathbf{F}_{ij}$)
+\begin{equation*}
+\mathcal {O}=
+\begin{bmatrix}
+\mathbf{C}\\
+\mathbf{C}\mathbf{F}\\
+\mathbf{C}\mathbf{F}^{2}
+\end{bmatrix}
+=\left[
+\begin{array}{ccc} 1 & 0 & 0\\
+0 & 1 & 0\\ 
+\mathbf{F}_{11} & \mathbf{F}_{12} & \mathbf{F}_{13}\\ 
+\mathbf{F}_{21} & \mathbf{F}_{22} & \mathbf{F}_{23}\\ 
+{\mathbf{F}_{11}}^2+\mathbf{F}_{12}\,\mathbf{F}_{21} & \mathbf{F}_{11}\,\mathbf{F}_{12}+\mathbf{F}_{12}\,\mathbf{F}_{22} & \mathbf{F}_{11}\,\mathbf{F}_{13}+\mathbf{F}_{12}\,\mathbf{F}_{23}+\mathbf{F}_{13}\,\mathbf{F}_{33}\\ 
+\mathbf{F}_{11}\,\mathbf{F}_{21}+\mathbf{F}_{21}\,\mathbf{F}_{22} & {\mathbf{F}_{22}}^2+\mathbf{F}_{12}\,\mathbf{F}_{21} & \mathbf{F}_{13}\,\mathbf{F}_{21}+\mathbf{F}_{22}\,\mathbf{F}_{23}+\mathbf{F}_{23}\,\mathbf{F}_{33} 
+\end{array}\right]
+\end{equation*}
+\par
+Since the first two rows of matrix $\mathcal {O}$ can ensure that $\mathrm{rank}\left(\mathcal {O}\right) \in \{2,3\}$, the system will always be observable unless both $\mathbf{F}_{13}$ and $\mathbf{F}_{23}$ are zero. As shown in the previous section, $\alpha \neq 0$ since the chassis mass is impossible to be $\infty$, and $\gamma \neq 0$ since we assume the existance of tire friction force. Thus, the situation when $\mathbf{F}_{13}$ and $\mathbf{F}_{23}$ are both zero is only when $\eta=F_x (\hat{U},\hat{\omega},1)=0$. From the expression of $f (U,\omega,\mu_{\max}) $, we can conclude that, for reasonable macro-parameters, we can only get a zero value of $\eta$ with $\hat{s}=0$. In other words, $r_e\hat{\omega} = \hat{U}$. Therefore, if the tire tangential speed and the speed of the axle relative to the road are not equal, the system will be always observable. The system is now detectable since an observable system is also detectable.
+\end{document}
