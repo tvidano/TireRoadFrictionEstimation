@@ -1,12 +1,14 @@
-function [XKK,PKK] = ukf_upd(model_param,X_HATK,PK,uprev,yk)
+function [XKK,PKK] = ukf_upd(model_param,X_HATK,PK,uprev,yk,output_eqn)
 % PERFORMS MEASUREMENT UPDATE STEP IN UKF
 %
 % INPUTS: 
 %   model_param {struct}: A struct containing model parameters,
-%   X_HAT {vector} A Priori State Estimation [K|K-1],
-%   P {matrix} A Priori State Covariance Matrix [K|K-1],
-%   u {vector}: A Priori Input Vector [k-1],
+%   X_HATK {vector} A Priori State Estimation [K|K-1],
+%   PK {matrix} A Priori State Covariance Matrix [K|K-1],
+%   uprev {vector}: A Priori Input Vector [k-1],
 %   yk {vector}: measurement 
+%   output_eqn {func. handle}: Handle to the function defining output
+%       equation. Inputs are model_param, previous state, current input.
 %
 % OUTPUTS: 
 %   X_HAT {vector}: A Posteriori State Estimation [K|K],

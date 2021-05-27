@@ -1,5 +1,5 @@
-function [xk] = state_eqn(model_param,xprev,uprev)
-% Calls state equation 
+function [xk] = batt_state_eqn(model_param,xprev,uprev)
+% Calls state equation for battery model.
 %
 % INPUTS: 
 %   model_param {struct}: A struct containing model parameters,

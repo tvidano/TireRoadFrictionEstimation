@@ -1,11 +1,13 @@
-function [samp_mean,samp_var] = ukf_pred(model_param,X_HAT,P,uprev)
+function [samp_mean,samp_var] = ukf_pred(model_param,X_HAT,P,uprev,state_eqn)
 % PERFORMS MODEL PREDICTION STEP IN UKF
 %
 % INPUTS: 
 %   model_param {struct}: A struct containing model parameters, 
 %   X_HAT {vector}: A Posteriori State Estimation [K-1|K-1],
 %   P {matrix} = A Posteriori State Covariance Matrix [K-1|K-1],
-%   u {vector} = Input Vector [K-1] 
+%   uprev {vector} = Previous Input Vector [K-1]
+%   state_eqn {func. handle}: Handle to the function defining state
+%       equation. Inputs are model_param, previous state, current input.
 %
 % OUTPUTS: 
 %   X_HAT {vector} A Priori State Estimation [K|K-1], 
@@ -41,13 +43,13 @@ for j = 1:1:2*N   % [k|k-1]
     
 end
 
-%% Compute sample mean, variance
+%% Compute sample mean, covariance
 
 samp_mean = mean(x_hatk);
-var = zeros(1,2*N); % Column vector of variances
+Vars = zeros(1,2*N); % Column vector of variances
 for i = 1:1:2*N  % [k|k-1]
     % to compute samp var
-    var(i) = (x_hatk(i) - samp_mean) * (x_hatk(i) - samp_mean).';
+    Vars(i) = (x_hatk(i) - samp_mean) * (x_hatk(i) - samp_mean).';
     
 end
-samp_var = mean(var) + Q;
+samp_var = mean(Vars) + Q;
