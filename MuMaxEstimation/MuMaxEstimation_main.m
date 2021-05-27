@@ -20,14 +20,18 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
 % Collect measurement data:
-
+mu8 = matfile('mu0.80.mat');
+t = mu8.t;
+U = mu8.U;
+s = mu8.s;
+T = mu8.T;
 
 %% Implement UKF
 
 for k = 2:1:length(t)
     % model prediction step
     j = k - 1;
-    [xk,pk] = ukf_pred(model_param,SOC(j),P_soc(j),I(j),@batt_state_eqn);
+    [xk,pk] = ukf_pred(model_param,SOC(j),P_soc(j),I(j),@wheel_state_eqn);
     
     % Get measurement yk
     Vc(k) = exp(-del_t/tauc)*Vc(j) + Rc*(1-exp(-del_t/tauc))*I(j);
