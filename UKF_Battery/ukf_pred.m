@@ -1,13 +1,21 @@
-function [samp_mean,samp_var] = ukf_pred(N,X_HAT,P,uprev)
+function [samp_mean,samp_var] = ukf_pred(model_param,X_HAT,P,uprev)
 % PERFORMS MODEL PREDICTION STEP IN UKF
-
-% INPUTS: N [dimension of inputs], X_HAT[K-1|K-1], P[K-1|K-1], u[k-1] 
-
-% OUTPUTS: X_HAT[K|K-1], P[K|K-1]
+%
+% INPUTS: 
+%   model_param {struct}: A struct containing model parameters, 
+%   X_HAT {vector}: A Posteriori State Estimation [K-1|K-1],
+%   P {matrix} = A Posteriori State Covariance Matrix [K-1|K-1],
+%   u {vector} = Input Vector [K-1] 
+%
+% OUTPUTS: 
+%   X_HAT {vector} A Priori State Estimation [K|K-1], 
+%   P {matrix} A Priori State Covariance Matrix [K|K-1],
 
 % ---------------------------------------------------------------
 
-global Q
+% Unpack Model Parameters:
+Q = model_param.Q;
+N = model_param.N;
 
 %% Compute Cholesky Decomp, Form 2*N Sigma Points
 if P == 0
@@ -16,6 +24,7 @@ else
     choles = chol(N*P);
 end
 
+sigX_HAT = zeros(1,2*N); % Each column contains a state vector sample
 for i = 1:1:N   % [k-1|k-1]
     % result = 2*N sigma point vector 
     sigX_HAT(i)= X_HAT + choles(i,:).';  % i-th row of Cholesky decomposition
@@ -25,18 +34,20 @@ end
 
 %% Propagate through STATE eqn
 
+x_hatk = zeros(1,2*N);
 for j = 1:1:2*N   % [k|k-1]
     % progagate each sig pt
-    x_hatk(j) = state_eqn(sigX_HAT(j),uprev); 
+    x_hatk(j) = state_eqn(model_param,sigX_HAT(j),uprev); 
     
 end
 
 %% Compute sample mean, variance
 
-samp_mean = sum(x_hatk)/(2*N);
-for ii = 1:1:2*N  % [k|k-1]
+samp_mean = mean(x_hatk);
+var = zeros(1,2*N); % Column vector of variances
+for i = 1:1:2*N  % [k|k-1]
     % to compute samp var
-    var(ii) = (x_hatk(ii) - samp_mean) * (x_hatk(ii) - samp_mean).';
+    var(i) = (x_hatk(i) - samp_mean) * (x_hatk(i) - samp_mean).';
     
 end
-samp_var = sum(var)/(2*N) + Q;
+samp_var = mean(var) + Q;

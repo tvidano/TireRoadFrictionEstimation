@@ -1,12 +1,18 @@
-function [xk] = state_eqn(xprev,uprev)
+function [xk] = state_eqn(model_param,xprev,uprev)
 % Calls state equation 
-
-% INPUTS: x[k-1|k-1], u[k-1]
-
-% OUTPUTS: x_hat[k|k-1]
+%
+% INPUTS: 
+%   model_param {struct}: A struct containing model parameters,
+%   xprev {vector}: Previous A Posteriori State Vector [k-1|k-1],
+%   u {vector}: Previous Input Vector [k-1]
+%
+% OUTPUTS: 
+%   x_hat {vector}: Current A Priori State Vector [k|k-1]
 
 %-------------------------------------------------------
-global del_t Cbat
+% Unpack Model Parameters:
+del_t = model_param.del_t;
+Cbat = model_param.Cbat;
 
 xk = xprev - (del_t/Cbat)*uprev;
 
