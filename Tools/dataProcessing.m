@@ -20,8 +20,12 @@ for i = 1:length(mus)
     t = t(iStart:end); % Start t at 0
     U = muData{iStart:end,3};
     s = muData{iStart:end,4};
-    T = muData{iStart:end,6};
-    save(fullfile(dataPath, "mu" + mus(i) + ".mat"),'t','U','s','T');
+    Fx = muData{iStart:end,5};
+    Tb = muData{iStart:end,6};
+    w = muData{iStart:end,7};
+    Ts = muData{iStart:end,9};
+    save(fullfile(dataPath, "mu" + mus(i) + ".mat"),'t','U','s','Fx',...
+        'Tb','w','Ts');
     figure();subplot(2,1,1);
     plot(t,s); ylabel('Long. Slip');
     ylim([-1.1,1.1]);
