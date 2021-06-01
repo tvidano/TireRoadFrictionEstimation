@@ -32,8 +32,8 @@ ts = abs(t(2) - t(1));
 
 % FOR EKF: the following are constant for all k 
 C_pr = [1 0 0; 0 1 0];
-E_pr = diag([1 1 1]);
-F_pr = diag([1 1]);
+E_pr = eye(3);
+F_pr = eye(2);
 
 % INITIAL values
 
@@ -41,24 +41,28 @@ F_pr = diag([1 1]);
 %% Implement UKF, EKF
 
 for k = 2:1:length(t)
-    % model prediction step, UKF
-    j = k - 1;
-    [muk_ukf,pk_ukf] = ukf_pred(model_param,state_ukf(j),var_ukf(j),I(j),@wheel_state_eqn);
-    
-    % model prediction step, EKF
-    
     
     % Get measurement yk
     Vc(k) = exp(-del_t/tauc)*Vc(j) + Rc*(1-exp(-del_t/tauc))*I(j);
     yk = V(k) + Vc(k);
     
+    % model prediction step, UKF
+    j = k - 1;
+    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(j),var_ukf(j),I(j),@wheel_state_eqn);
+    
+    % model prediction step, EKF
+    [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(j),var_ekf(j),I(j),E_pr,@wheel_state_eqn,ts);
+    
+    
     % measurement update step, UKF
-    [state_ukf(k),var_ukf(k)] = ukf_upd(model_param, muk_ukf, pk_ukf, I(j), yk,...
+    [states_ukf(k),var_ukf(k)] = ukf_upd(model_param, xk_ukf, pk_ukf, I(j), yk,...
                                 @batt_output_eqn);
                             
     % measurement update step, EKF
+    [states_ekf(k),var_ekf(k)] = ekf_upd(model_param, xk_ekf, pk_ekf, I(k), yk, C_pr, F_pr, @output_eqn);
     
 end
+
 
 %% Data Visualization 
 
