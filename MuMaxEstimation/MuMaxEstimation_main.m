@@ -19,8 +19,8 @@ model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
 model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
-model_param.Q = eye(3);
-model_param.R = eye(2)*0.01;
+model_param.Q = diag([5,1e-1,0]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-8,2e-8]);
 model_param.N = 3;
 model_param.M = 2;
 
@@ -83,15 +83,24 @@ U_ukf = states_ukf(1,:);
 w_ukf = states_ukf(2,:);
 mu_ukf = states_ukf(3,:);
 
+s_ukf = model_param.r_e*w_ukf./U_ukf - 1;
+
 %% Data Visualization 
 
 figure();
 plot(t,mu_ukf,t,mu*ones(length(t),1)); 
 xlabel('Time [s]'); ylabel('\mu_{max}');
 legend('UKF','Measurement');
+grid on;
 
 figure();
 plot(t,U_ukf,t,U);
 xlabel('Time [s]'); ylabel('U [m/s]');
 legend('UKF','Measurement');
+grid on;
 
+figure();
+plot(t,s,t,s_ukf);
+xlabel('Time [s]'); ylabel('\kappa');
+ylim([-1.1,1.1]);
+grid on;
