@@ -12,7 +12,6 @@ mu = 0.80;
 % -------------------------------------------------------------------------
 
 muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
-% mu8 = matfile('mu0.50.mat');
 tm = muData.t;
 Um = muData.U;
 sm = muData.s;
@@ -34,7 +33,6 @@ Fz = m*9.81/4;      % Tire Normal Force [N]
 
 % Define helper functions:
 calc_slip = @(w,U) r_e*w/U - 1;
-w = @(s,U) (s + 1)*U/r_e;
 get_force = @(U,w,mu) mu*Fz*sin(C*atan(B*(1 - E)*calc_slip(w,U)...
                       + E*atan(B*calc_slip(w,U))));
 

@@ -1,5 +1,5 @@
-function [x_hat] = wheel_state_eqn(model_param,xprev,uprev)
-%WHEEL_STATE_EQN Calls state equation for wheel model estimation.
+function [y_hat] = wheel_output_eqn(model_param,xprev,uprev)
+%WHEEL_OUTPUT_EQN Calls output equation for wheel model estimation.
 %
 % INPUTS: 
 %   model_param {struct}: A struct containing model parameters,
@@ -7,7 +7,7 @@ function [x_hat] = wheel_state_eqn(model_param,xprev,uprev)
 %   uprev {vector}: Previous Input Vector [k-1]
 %
 % OUTPUTS: 
-%   x_hat {vector}: Current A Priori State Vector [k|k-1]
+%   y_hat {vector}: Current A Priori Output Vector [k|k-1]
 
 %-------------------------------------------------------
 % Unpack Model Parameters:
@@ -48,7 +48,7 @@ for i = 2:n
 end
 
 % Pack current states:
-x_hat = [U(end),w(end),mu]';
+y_hat = [U(end),w(end)]';
 
 end
 

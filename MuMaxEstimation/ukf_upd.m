@@ -15,10 +15,11 @@ function [XKK,PKK] = ukf_upd(model_param,X_HATK,PK,uprev,yk,output_eqn)
 %   P {N x N matrix}: A Posteriori State Covariance Matrix [K|K]
 
 % ---------------------------------------------------------------
-%global R
+
 % Unpack Model Parameters:
-R = model_param.R;
-N = model_param.N;
+R = model_param.R;      % Output Covariance Matrix
+N = model_param.N;      % Number of states
+M = model_param.M;    % Number of output measurements
 
 %% CHOLESKY DECOMP, NEW SET OF SIGMA POINTS
 choles = chol(N*PK);
@@ -33,7 +34,7 @@ end
 
 %% Propagate through OUTPUT eqn
 
-y_hatk = zeros(N,2*N);
+y_hatk = zeros(M,2*N);
 for j = 1:1:2*N   % y[k|k-1]
     % progagate each sig pt
     y_hatk(:,j) = output_eqn(model_param, sigX_HAT(:,j), uprev); 
@@ -42,9 +43,9 @@ end
 
 %% Compute sample mean, variances
 
-ymean = mean(y_hatk,2);  % compute mean along dir 2 (mean of each row)
-xyvar = zeros(N,N);  % variance is N x N matrix
-yvar = xyvar;
+ymean = mean(y_hatk,2); % compute mean along dir 2 (mean of each row)
+xyvar = zeros(N,M); % variance is N x M matrix
+yvar = zeros(M,M);
 for ii = 1:1:2*N  % ii-th page of the 3D variance matrix
     % compute those variances
     XYvar(:,:,ii) = (sigX_HAT(:,ii) - X_HATK) * (y_hatk(:,ii) - ymean).'; 
