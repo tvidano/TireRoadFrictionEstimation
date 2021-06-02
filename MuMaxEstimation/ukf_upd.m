@@ -3,16 +3,16 @@ function [XKK,PKK] = ukf_upd(model_param,X_HATK,PK,uprev,yk,output_eqn)
 %
 % INPUTS: 
 %   model_param {struct}: A struct containing model parameters,
-%   X_HATK {vector} A Priori State Estimation [K|K-1],
+%   X_HATK {COL vector} A Priori State Estimation [K|K-1],
 %   PK {matrix} A Priori State Covariance Matrix [K|K-1],
 %   uprev {vector}: A Priori Input Vector [k-1],
-%   yk {vector}: measurement 
+%   yk {COL vector}: measurement 
 %   output_eqn {func. handle}: Handle to the function defining output
 %       equation. Inputs are model_param, previous state, current input.
 %
 % OUTPUTS: 
-%   X_HAT {vector}: A Posteriori State Estimation [K|K],
-%   P {matrix}: A Posteriori State Covariance Matrix [K|K]
+%   X_HAT {COL vector}: A Posteriori State Estimation [K|K],
+%   P {N x N matrix}: A Posteriori State Covariance Matrix [K|K]
 
 % ---------------------------------------------------------------
 %global R
@@ -23,37 +23,39 @@ N = model_param.N;
 %% CHOLESKY DECOMP, NEW SET OF SIGMA POINTS
 choles = chol(N*PK);
 
-sigX_HAT = zeros(1,2*N);
+sigX_HAT = zeros(N,2*N);
 for i = 1:1:N   % x[k|k-1]
     % result = 2*N sigma point vector 
-    sigX_HAT(i)= X_HATK + choles(i,:).';  % i-th row of Cholesky decomposition
-    sigX_HAT(N+i) = X_HATK - choles(i,:).';
+    sigX_HAT(:,i)= X_HATK + choles(i,:).';  % i-th row of Cholesky decomposition
+    sigX_HAT(:,N+i) = X_HATK - choles(i,:).';
     
 end
 
 %% Propagate through OUTPUT eqn
 
-y_hatk = zeros(1,2*N);
+y_hatk = zeros(N,2*N);
 for j = 1:1:2*N   % y[k|k-1]
     % progagate each sig pt
-    y_hatk(j) = output_eqn(model_param, sigX_HAT(j), uprev); 
+    y_hatk(:,j) = output_eqn(model_param, sigX_HAT(:,j), uprev); 
     
 end
 
 %% Compute sample mean, variances
 
-ymean = sum(y_hatk)/(2*N);
-xyvar = zeros(1,2*N);
+ymean = mean(y_hatk,2);  % compute mean along dir 2 (mean of each row)
+xyvar = zeros(N,N);  % variance is N x N matrix
 yvar = xyvar;
-for ii = 1:1:2*N
+for ii = 1:1:2*N  % ii-th page of the 3D variance matrix
     % compute those variances
-    xyvar(ii) = (sigX_HAT(ii) - X_HATK) * (y_hatk(ii) - ymean).'; 
-    yvar(ii) = (y_hatk(ii) - ymean) * (y_hatk(ii) - ymean).';
-
+    XYvar(:,:,ii) = (sigX_HAT(:,ii) - X_HATK) * (y_hatk(:,ii) - ymean).'; 
+    Yvar(:,:,ii) = (y_hatk(:,ii) - ymean) * (y_hatk(:,ii) - ymean).';
+    xyvar = XYvar(:,:,ii) + xyvar; 
+    yvar = Yvar(:,:,ii) + yvar;
+    
 end
 
-Pxy = sum(xyvar)/(2*N);
-Py = sum(yvar)/(2*N) + R;
+Pxy = xyvar ./ (2*N);
+Py = (yvar ./ (2*N)) + R;
 
 %% Posteriori Estimate
 
