@@ -19,7 +19,7 @@ function [XKK,PKK] = ukf_upd(model_param,X_HATK,PK,uprev,yk,output_eqn)
 % Unpack Model Parameters:
 R = model_param.R;      % Output Covariance Matrix
 N = model_param.N;      % Number of states
-M = model_param.M;    % Number of output measurements
+M = model_param.M;      % Number of output measurements
 
 %% CHOLESKY DECOMP, NEW SET OF SIGMA POINTS
 choles = chol(N*PK);

@@ -29,14 +29,14 @@ torque = uprev;
 
 % Define helper functions:
 calc_slip = @(w,U) r_e*w/U - 1;
-get_force = @(U,w,mu) mu*Fz*sin(C*atan(B*(1 - E)*calc_slip(w,U)...
+get_force = @(U,w) Fz*sin(C*atan(B*(1 - E)*calc_slip(w,U)...
                       + E*atan(B*calc_slip(w,U))));
 
 % Euler Integration to Estimate Next Discrete State:
 n = 10;
 dt = ts/n;
 for i = 2:n
-    Fx = -get_force(U(i-1),w(i-1),mu);
+    Fx = -mu(i-1)*get_force(U(i-1),w(i-1));
     dU = Fx/(m/4);
     U(i) = U(i-1) + dU*(dt);
     
@@ -45,10 +45,12 @@ for i = 2:n
     if w(i) <= 0 
         w(i) = 0;
     end
+    
+    mu(i) = mu(i-1);
 end
 
 % Pack current states:
-x_hat = [U(end),w(end),mu]';
+x_hat = [U(end),w(end),mu(end)]';
 
 end
 

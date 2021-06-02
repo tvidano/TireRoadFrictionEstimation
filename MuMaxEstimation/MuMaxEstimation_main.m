@@ -20,7 +20,7 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
 model_param.Q = eye(3);
-model_param.R = eye(2);
+model_param.R = eye(2)*0.01;
 model_param.N = 3;
 model_param.M = 2;
 
@@ -51,9 +51,8 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-states_ukf(1,:) = [U(1),w(1),mu];
+states_ukf(:,1) = [U(1),w(1),mu]';
 var_ukf(:,:,1) = eye(3);
-
 %% Implement UKF, EKF
 
 for k = 2:1:length(t)
@@ -63,7 +62,7 @@ for k = 2:1:length(t)
     
     % model prediction step, UKF
     j = k - 1;
-    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(j),var_ukf(:,:,j),...
+    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(:,j),var_ukf(:,:,j),...
                                torque(j),@wheel_state_eqn);
     
     % model prediction step, EKF
@@ -71,7 +70,7 @@ for k = 2:1:length(t)
     
     
     % measurement update step, UKF
-    [states_ukf(k,:),var_ukf(:,:,k)] = ukf_upd(model_param, xk_ukf,... 
+    [states_ukf(:,k),var_ukf(:,:,k)] = ukf_upd(model_param, xk_ukf,... 
                                 pk_ukf, torque(j), yk, @wheel_output_eqn);
                             
     % measurement update step, EKF
@@ -80,13 +79,19 @@ for k = 2:1:length(t)
 end
 
 % Unpack States:
-U_ukf = states_ukf(:,1);
-w_ukf = states_ukf(:,2);
-mu_ukf = states_ukf(:,3);
+U_ukf = states_ukf(1,:);
+w_ukf = states_ukf(2,:);
+mu_ukf = states_ukf(3,:);
 
 %% Data Visualization 
 
 figure();
 plot(t,mu_ukf,t,mu*ones(length(t),1)); 
+xlabel('Time [s]'); ylabel('\mu_{max}');
+legend('UKF','Measurement');
+
+figure();
+plot(t,U_ukf,t,U);
 xlabel('Time [s]'); ylabel('U [m/s]');
 legend('UKF','Measurement');
+

@@ -22,6 +22,7 @@ model_param.Cc = 2400;      % Capacitance, Farad
 model_param.Cbat = 5 * 3600;% Battery Capacity, mAh?
 model_param.R0 = 0.01;      % Battery Resistance, ohm
 model_param.N = 1;          % Number of states to estimate
+model_param.M = 1;
 model_param.Q = 2.5E-7;     % process noise variance
 model_param.R = 1E-4;       % sensor noice variance
 model_param.t = nonlinIV.t; % time vector
