@@ -21,11 +21,13 @@ model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
 % Collect measurement data:
 mu8 = matfile('mu0.80.mat');
-t = mu8.t;  % time
-U = mu8.U;  % longitudinal speed
-s = mu8.s;  % long. tire slip
-T = mu8.T;  % torque [INPUT]
-w = mu8.w;  % wheel omega (ang. vel.)
+t = mu8.t;      % time
+U = mu8.U;      % longitudinal speed
+s = mu8.s;      % long. tire slip
+Tb = mu8.Tb;    % brake torque
+Tw = mu8.Tw;    % wheel torque (accel.)
+w = mu8.w;      % wheel omega (ang. vel.)
+torque = Tw - Tb;
 
 % Determine sampling interval
 ts = abs(t(2) - t(1)); 
@@ -36,19 +38,19 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-
+states_ukf(1) = [U(1),w(1),mu];
 
 %% Implement UKF, EKF
 
 for k = 2:1:length(t)
     
     % Get measurement yk
-    Vc(k) = exp(-del_t/tauc)*Vc(j) + Rc*(1-exp(-del_t/tauc))*I(j);
-    yk = V(k) + Vc(k);
+    yk = [U,w];
     
     % model prediction step, UKF
     j = k - 1;
-    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(j),var_ukf(j),I(j),@wheel_state_eqn);
+    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(j),var_ukf(j),...
+                               I(j),@wheel_state_eqn);
     
     % model prediction step, EKF
     [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(j),var_ekf(j),I(j),E_pr,@wheel_state_eqn,ts);

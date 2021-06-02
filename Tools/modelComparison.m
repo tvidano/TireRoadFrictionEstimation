@@ -2,15 +2,24 @@
 % wheel model solved with ODE45, and single wheel model solved with euler
 % integration.
 clear;clc;close all;
+
 %% Collect measurement data:
-mu8 = matfile('mu0.80.mat');
-tm = mu8.t;
-Um = mu8.U;
-sm = mu8.s;
-Fxm = mu8.Fx;
-Tbm = mu8.Tb;
-wm = mu8.w;
-Twm = mu8.Tw;
+% -------------------------------------------------------------------------
+% Select which mu to compare models with the measurements:
+mu = 0.80;
+% mu = 0.50;
+% mu = 0.30;
+% -------------------------------------------------------------------------
+
+muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+% mu8 = matfile('mu0.50.mat');
+tm = muData.t;
+Um = muData.U;
+sm = muData.s;
+Fxm = muData.Fx;
+Tbm = muData.Tb;
+wm = muData.w;
+Twm = muData.Tw;
 
 % Define Model Parameters:
 C = 1.5833;         % Pac. Tire Hyperparam.
@@ -39,7 +48,6 @@ s = omega;
 U(1) = Um(1);
 s(1) = sm(1);
 omega(1) = wm(1);
-mu = 0.8;
 
 % Euler Integration
 for i = 2:n
@@ -52,14 +60,20 @@ for i = 2:n
     torque = Tw - Tb;
     domega = (torque - r_e*Fx(i))/J;
     omega(i) = omega(i-1) + domega*(t(i) - t(i-1));
+    if omega(i) <= 0 
+        omega(i) = 0;
+    end
     s(i) = calc_slip(omega(i),U(i));
 end
 
 % Plot trajectories
 figure();subplot(2,1,1);
-plot(t,U,tm,Um); title('Euler Long. Vel.'); legend('Euler','Measured');
+plot(t,U,tm,Um); title('Euler Longitudinal Velocity'); 
+legend('Euler','Measured'); xlabel('Time [s]'); ylabel('U [m/s]');
 subplot(2,1,2);
-plot(t,omega,tm,wm); title('Euler Long. Slip'); legend('Euler','Measured');
+plot(t,omega,tm,wm); title('Euler Angular Velocity'); 
+legend('Euler','Measured'); xlabel('Time [s]'); ylabel('\omega [rad/s]');
+sgtitle("Euler Model Trajectories (pdf) mu = " + num2str(mu,'%.2f'));
 
 % Plot Errors:
 for i = 1:length(tm)
@@ -74,7 +88,7 @@ title('Longitudinal Velocity [m/s]');
 subplot(2,1,2);
 histogram(err_w,'Normalization','pdf');
 title('Wheel Angular Velocity [m/s]');
-sgtitle('Euler Model Errors (pdf)');
+sgtitle("Euler Model Errors (pdf) mu = " + num2str(mu,'%.2f'));
 
 %% Simulate single wheel model with ODE45 Integration
 model_param = struct('C',C,'B',B,'E',E,'r_e',r_e,...
@@ -100,6 +114,15 @@ U = y(:,1);
 omega = y(:,2);
 T = ext(:,1);
 
+% Plot trajectories
+figure();subplot(2,1,1);
+plot(t,U,tm,Um); title('Euler Longitudinal Velocity'); 
+legend('Euler','Measured');xlabel('Time [s]'); ylabel('U [m/s]');
+subplot(2,1,2);
+plot(t,omega,tm,wm); title('Euler Angular Velocity'); 
+legend('Euler','Measured');xlabel('Time [s]'); ylabel('\omega [rad/s]');
+sgtitle("R-K 45 Model Trajectories (pdf) mu = " + num2str(mu,'%.2f'));
+
 % Plot Errors:
 for i = 1:length(tm)
     U_45 = interp1(t,U,tm(i));
@@ -113,4 +136,4 @@ title('Longitudinal Velocity [m/s]');
 subplot(2,1,2);
 histogram(err_w,'Normalization','pdf');
 title('Wheel Angular Velocity [m/s]');
-sgtitle('ODE45 Model Errors (pdf)');
+sgtitle("R-K 45 Model Errors (pdf) mu = " + num2str(mu,'%.2f'));
