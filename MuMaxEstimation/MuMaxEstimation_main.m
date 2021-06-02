@@ -19,8 +19,8 @@ model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
 model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
-model_param.Q = eye(3);
-model_param.R = eye(2)*0.01;
+model_param.Q = diag([0.001,0.001,0.005]);
+model_param.R = diag([0.5,0.5]);
 model_param.N = 3;
 model_param.M = 2;
 
@@ -52,7 +52,8 @@ F_pr = eye(2);
 
 % INITIAL values
 states_ukf(:,1) = [U(1),w(1),mu]';
-var_ukf(:,:,1) = eye(3);
+var_ukf(:,:,1) = zeros(3,3);
+
 %% Implement UKF, EKF
 
 for k = 2:1:length(t)
@@ -95,3 +96,30 @@ plot(t,U_ukf,t,U);
 xlabel('Time [s]'); ylabel('U [m/s]');
 legend('UKF','Measurement');
 
+% Estimation Error
+mu_err = mu - mu_ukf; 
+figure
+plot(t,mu_err);
+title('Estimation Error');
+xlabel('Time');
+ylabel('Error');
+
+% Plot distribution of errors
+% PDF of Estimation Error
+intv = 0.05;
+xvals = -7:intv:7;
+yvals = normpdf(xvals,0,sqrt(var_ukf(3,3,end)));
+% bins = 2 * xvals(end) / intv;
+% newDat = histBins(mu_err, bins, xvals(end));
+% newLen = length(xvals) - 1;
+
+figure
+% plot(xvals(1:newLen),newDat);
+histogram(mu_err,'Normalization','pdf','DisplayStyle','stairs');
+hold on
+% plot(xvals(1:newLen),yvals(1:newLen));
+plot(xvals(1:end-1),yvals(1:end-1));
+legend('Estimation Error Data','Theoretical PDF');
+xlabel('Range');
+ylabel('Frequency');
+title('Estimation Error PDF');
