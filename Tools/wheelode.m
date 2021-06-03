@@ -48,7 +48,7 @@ Fx = -get_force(U,w,mu);
 dU = Fx/(m/4);
 domega = (torque - r_e*Fx)/J;
 % Prevent negative ang. vel.
-if (w == 0) && domega < 0
+if (w == 0) && domega <= 0
     domega = 0;
 end
 

@@ -43,7 +43,7 @@ w0 = U0/r_e;
 y0 = [U0;w0];
 
 % Simulation:
-options = odeset('RelTol',1e-8);
+options = odeset('RelTol',1e-12);
 [t,y] = ode45(@(t,y) wheelode(t,y,model_param,inputs), tspan, y0, options);
 
 % Get extra outputs:
@@ -52,12 +52,12 @@ for i = 1:length(t)
 end
 
 % Unpack outputs:
-U = y(:,1);
-w = y(:,2);
+U = y(:,1); U(isnan(U))=0;
+w = y(:,2); w(isnan(w))=0;
 T = ext(:,1);
 s = r_e*w./U - 1;
 
-% Plot trajectories
+%% Plot trajectories
 figure();subplot(2,1,1);
 plot(t,U); title('Euler Longitudinal Velocity');
 xlabel('Time [s]'); ylabel('U [m/s]');
