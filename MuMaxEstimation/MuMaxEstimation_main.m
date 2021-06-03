@@ -19,8 +19,8 @@ model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
 model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
 
-model_param.Q = diag([5,1e-1,0]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-8,2e-8]);
+model_param.Q = diag([1,1,1]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1,1]);
 model_param.N = 3;
 model_param.M = 2;
 
@@ -32,14 +32,16 @@ mu = 0.80;
 % -------------------------------------------------------------------------
 
 % Collect measurement data:
-muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+% muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+muData = matfile("LF_mu" + num2str(mu,'%.2f') + ".mat");
 t = muData.t;      % time
 U = muData.U;      % longitudinal speed
 s = muData.s;      % long. tire slip
-Tb = muData.Tb;    % brake torque
-Tw = muData.Tw;    % wheel torque (accel.)
+% Tb = muData.Tb;    % brake torque
+% Tw = muData.Tw;    % wheel torque (accel.)
 w = muData.w;      % wheel omega (ang. vel.)
-torque = Tw - Tb;
+% torque = Tw - Tb;
+torque = muData.T;
 
 % Determine sampling interval
 ts = abs(t(2) - t(1)); 

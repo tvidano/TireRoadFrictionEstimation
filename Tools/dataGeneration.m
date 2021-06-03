@@ -53,14 +53,25 @@ end
 
 % Unpack outputs:
 U = y(:,1);
-omega = y(:,2);
+w = y(:,2);
 T = ext(:,1);
+s = r_e*w./U - 1;
 
 % Plot trajectories
 figure();subplot(2,1,1);
 plot(t,U); title('Euler Longitudinal Velocity');
 xlabel('Time [s]'); ylabel('U [m/s]');
 subplot(2,1,2);
-plot(t,omega); title('Euler Angular Velocity'); 
+plot(t,w); title('Euler Angular Velocity'); 
 xlabel('Time [s]'); ylabel('\omega [rad/s]');
 sgtitle("R-K 45 Model Trajectories (pdf) mu = " + num2str(mu,'%.2f'));
+
+%% Save output:
+currentFile = mfilename('fullpath');
+[pathstr,~,~] = fileparts(currentFile);
+relPath = fullfile('..','MuMaxEstimation','data');
+dataPath = fullfile(pathstr,relPath);
+if ~exist(dataPath, 'dir')
+    mkdir(dataPath)
+end
+save(fullfile(dataPath, "LF_mu" + num2str(mu,'%.2f') + ".mat"),'t','U','s','w','T');
