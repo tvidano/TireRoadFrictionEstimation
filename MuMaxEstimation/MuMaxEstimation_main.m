@@ -9,7 +9,7 @@
 
 clear; close all; clc; 
 
-%% Setup
+%% Model Setup
 % Define model parameters:
 model_param.C = 1.5833;         % Pac. Tire Hyperparam.
 model_param.B = -15.0975;       % Pac. Tire Hyperparam.
@@ -17,12 +17,14 @@ model_param.E = 0.6099;         % Pac. Tire Hyperparam.
 model_param.r_e = 0.4013;       % Effective Tire Radius [m]; 0.37338;
 model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
-model_param.Fz = model_param.m*9.81/4; % Tire Normal Force [N]
+Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
+model_param.Fz = 1.5*Fz;
 
-model_param.Q = diag([1,1,1]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1,1]);
+model_param.Q = diag([1e-3,1e-3,0]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-5,1e-5]);
 model_param.N = 3;
 model_param.M = 2;
+model_param.ts = 2e-3;
 
 % -------------------------------------------------------------------------
 % Select which mu to load measurements:
@@ -32,20 +34,29 @@ mu = 0.80;
 % -------------------------------------------------------------------------
 
 % Collect measurement data:
+
+% To use measurements from high fidelity model:
 % muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+% Tb = muData.Tb;    % brake torque
+% Tw = muData.Tw;    % wheel torque (accel.)
+% torque = Tw - Tb; 
+
+% To use measurements from low fidelity model:
 muData = matfile("LF_mu" + num2str(mu,'%.2f') + ".mat");
+torque = muData.T;
+
+% Measurement data from either model:
 t = muData.t;      % time
 U = muData.U;      % longitudinal speed
 s = muData.s;      % long. tire slip
-% Tb = muData.Tb;    % brake torque
-% Tw = muData.Tw;    % wheel torque (accel.)
 w = muData.w;      % wheel omega (ang. vel.)
-% torque = Tw - Tb;
-torque = muData.T;
 
-% Determine sampling interval
-ts = abs(t(2) - t(1)); 
-model_param.ts = ts;
+% Store torque table:
+model_param.t = t;
+model_param.torque = torque;
+model_param.options = odeset('RelTol',1e-3);
+
+%% EKF/UKF Setup: 
 
 % FOR EKF: the following are constant for all k 
 C_pr = [1 0 0; 0 1 0];
@@ -55,15 +66,19 @@ F_pr = eye(2);
 % INITIAL values
 states_ukf(:,1) = [U(1),w(1),mu]';
 var_ukf(:,:,1) = eye(3);
+
 %% Implement UKF, EKF
 
 for k = 2:1:length(t)
+    % Determine sampling interval
+    j = k - 1;
     
     % Get measurement yk
     yk = [U(k),w(k)]';
     
     % model prediction step, UKF
-    j = k - 1;
+    model_param.tk = t(k);
+    model_param.tj = t(j);
     [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(:,j),var_ukf(:,:,j),...
                                torque(j),@wheel_state_eqn);
     
@@ -102,7 +117,8 @@ legend('UKF','Measurement');
 grid on;
 
 figure();
-plot(t,s,t,s_ukf);
+plot(t,s_ukf,t,s);
 xlabel('Time [s]'); ylabel('\kappa');
 ylim([-1.1,1.1]);
+legend('UKF','Measurement');
 grid on;

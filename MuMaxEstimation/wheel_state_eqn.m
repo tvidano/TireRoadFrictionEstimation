@@ -11,43 +11,54 @@ function [x_hat] = wheel_state_eqn(model_param,xprev,uprev)
 
 %-------------------------------------------------------
 % Unpack Model Parameters:
-C = model_param.C;
-B = model_param.B;
-E = model_param.E;
-r_e = model_param.r_e;
-J = model_param.J;
-m = model_param.m;
-Fz = model_param.Fz;
-ts = model_param.ts;
+% C = model_param.C;
+% B = model_param.B;
+% E = model_param.E;
+% r_e = model_param.r_e;
+% J = model_param.J;
+% m = model_param.m;
+% Fz = model_param.Fz;
+% ts = model_param.ts;
+tk = model_param.tk; % Current time
+tj = model_param.tj; % Previous time
+
+% Pack torque table for ODE inputs:
+k = find(model_param.t == tk);
+j = k - 1;
+torques = [model_param.torque(j),model_param.torque(k)];
+inputs = struct('time',[tj, tk],'torque',torques);
 
 % Unpack previous states and inputs:
 U = xprev(1);
 w = xprev(2);
 mu = xprev(3);
+model_param.mu = mu; % Pass to ODE
 
-torque = uprev;
+% RK 4 Integration to Estimate Next Discrete State:
+% h = (tk - tj)/50;
+% t = tj:h:tk;
+% y = zeros(2,length(t));
+% y(:,1) = [U;w];
+% 
+% for i=1:(length(t)-1)
+%     K1 = wheelode(t(i),y(:,i),model_param,inputs);
+%     K2 = wheelode(t(i)+0.5*h,y(:,i)+0.5*h*K1,model_param,inputs);
+%     K3 = wheelode(t(i)+0.5*h,y(:,i)+0.5*h*K2,model_param,inputs);
+%     K4 = wheelode(t(i)+h,y(:,i)+h*K3,model_param,inputs);
+%     
+%     y(:,i+1) = y(i) + (1/6)*(K1+2*K2+2*K3+K4)*h;
+% end
 
-% Define helper functions:
-calc_slip = @(w,U) r_e*w/U - 1;
-get_force = @(U,w) Fz*sin(C*atan(B*(1 - E)*calc_slip(w,U)...
-                      + E*atan(B*calc_slip(w,U))));
+tspan = [tj;tk];
+y0 = [U;w];
 
-% Euler Integration to Estimate Next Discrete State:
-n = 10;
-dt = ts/n;
-for i = 2:n
-    Fx = -mu(i-1)*get_force(U(i-1),w(i-1));
-    dU = Fx/(m/4);
-    U(i) = U(i-1) + dU*(dt);
-    
-    domega = (torque - r_e*Fx)/J;
-    w(i) = w(i-1) + domega*(dt);
-    if w(i) <= 0 
-        w(i) = 0;
-    end
-    
-    mu(i) = mu(i-1);
-end
+options = model_param.options;
+[t,y] = ode23(@(t,y) wheelode(t,y,model_param,inputs), tspan, y0, options);
+mu = mu + 1e-6*rand;
+
+% Unpack outputs:
+U = y(:,1); 
+w = y(:,2);
 
 % Pack current states:
 x_hat = [U(end),w(end),mu(end)]';

@@ -26,31 +26,43 @@ mu = model_param.mu;
 %% Unpack states:
 U = y(1);
 w = y(2);
-if w <= 0
-    w = 0;
-end
-if U <= 0
-    U = 0;
-end
+% if w <= 0
+%     w = 0;
+% end
+% 
+% if U <= 0
+%     U = 0;
+% end
 
 %% Unpack inputs:
 tm = inputs.time;
 T = inputs.torque;
+% if length(tm) > 2
+%     torque = interp1(tm,T,t);
+% else
+%     torque = (T(2) - T(1))/(tm(2) - tm(1))*(t - tm(1)) + T(1);
+% end
 torque = interp1(tm,T,t);
 
 %% Define Helper Functions:
-calc_slip = @(w,U) r_e*w/U - 1;
-get_force = @(U,w,mu) mu*Fz*sin(C*atan(B*(1 - E)*calc_slip(w,U)...
-                      + E*atan(B*calc_slip(w,U))));
+% calc_slip = @(w,U) ;
+% get_force = @(U,w,mu) ;
 
 %% Cont. Time Equations:
-Fx = -get_force(U,w,mu);
+% Prevent Divide by Zero:
+if U ~= 0
+    Bs = B*-(U - r_e*w)/U;
+    Fx = mu*Fz*sin(C*atan(Bs - E*(Bs - atan(Bs))));
+else 
+    Fx = 0;
+end
 dU = Fx/(m/4);
 domega = (torque - r_e*Fx)/J;
+
 % Prevent negative ang. vel.
-if (w == 0) && domega <= 0
-    domega = 0;
-end
+% if (w == 0) && domega <= 0
+%     domega = 0;
+% end
 
 %% Pack Outputs:
 dydt(1) = dU;

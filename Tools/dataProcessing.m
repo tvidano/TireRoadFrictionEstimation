@@ -12,18 +12,20 @@ end
 
 % Collect data from AEB with Warning mu=0.8,0.5,0.3:
 mus = ["0.80","0.50","0.30"];
-start_times = [10,12.7,17.8];
+start_times = [15,15,20];
+end_times = [20,22,27];
 for i = 1:length(mus)
     muData = readtable("mu" + mus(i) + ".txt");
     t = muData{:,1};
     iStart = find(t>start_times(i),1);
-    t = t(iStart:end); % Start t at 0
-    U = muData{iStart:end,3};
-    s = muData{iStart:end,4};
-    Fx = muData{iStart:end,5};
-    Tb = muData{iStart:end,6};
-    w = muData{iStart:end,7};
-    Tw = muData{iStart:end,9};
+    iEnd = find(t>end_times(i),1);
+    t = t(iStart:iEnd); % Start t at 0
+    U = muData{iStart:iEnd,3};
+    s = muData{iStart:iEnd,4};
+    Fx = muData{iStart:iEnd,5};
+    Tb = muData{iStart:iEnd,6};
+    w = muData{iStart:iEnd,7};
+    Tw = muData{iStart:iEnd,9};
     save(fullfile(dataPath, "mu" + mus(i) + ".mat"),'t','U','s','Fx',...
         'Tb','w','Tw');
     figure();subplot(2,1,1);
