@@ -22,10 +22,10 @@ function [XKK, PKK] = ekf_upd(model_param, X_HATK,PK,uk,yk,C_pr,F_pr,output_eqn)
 R = model_param.R;
 
 % compute Kalman Gain
-LK = PK*Cpr.'/(C_pr*PK*C_prk.' + F_pr*R*F_pr.');
+LK = PK*C_pr.'/(C_pr*PK*C_pr.' + F_pr*R*F_pr.');
 
 % measurement update --> XKK
-XKK = X_HATK + LK*(yk - output_eqn());
+XKK = X_HATK + LK*(yk - output_eqn(model_param, X_HATK, uk));
 
 % measure update --> PKK
 PKK = PK - LK*C_pr*PK;

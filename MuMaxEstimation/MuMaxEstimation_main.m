@@ -20,8 +20,8 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
 model_param.Fz = 1.5*Fz;
 
-model_param.Q = diag([1e-3,1e-3,0]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-5,1e-5]);
+model_param.Q = diag([1e-4,1e-4,0]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-3,1e-3]);
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -64,8 +64,11 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-states_ukf(:,1) = [U(1),w(1),mu]';
-var_ukf(:,:,1) = eye(3);
+states_ukf(:,1) = [U(1),w(1),mu]';  % COL VEC
+var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
+
+states_ekf(:,1) = [U(1),w(1),mu]';
+var_ekf(:,:,1) = zeros(3,3);
 
 %% Implement UKF, EKF
 
@@ -83,7 +86,8 @@ for k = 2:1:length(t)
                                torque(j),@wheel_state_eqn);
     
     % model prediction step, EKF
-%     [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(j),var_ekf(j),I(j),E_pr,@wheel_state_eqn,ts);
+    [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(:,j),var_ekf(:,:,j),...
+                                torque(j),E_pr,@wheel_state_eqn);
     
     
     % measurement update step, UKF
@@ -91,34 +95,77 @@ for k = 2:1:length(t)
                                 pk_ukf, torque(j), yk, @wheel_output_eqn);
                             
     % measurement update step, EKF
-%     [states_ekf(k),var_ekf(k)] = ekf_upd(model_param, xk_ekf, pk_ekf, I(k), yk, C_pr, F_pr, @output_eqn);
+    [states_ekf(:,k),var_ekf(:,:,k)] = ekf_upd(model_param, xk_ekf, pk_ekf,...
+                                torque(k), yk, C_pr, F_pr, @wheel_output_eqn);
     
 end
 
-% Unpack States:
+% Unpack States: UKF
 U_ukf = states_ukf(1,:);
 w_ukf = states_ukf(2,:);
 mu_ukf = states_ukf(3,:);
 
 s_ukf = model_param.r_e*w_ukf./U_ukf - 1;
 
-%% Data Visualization 
+% Unpack states: EKF
+U_ekf = states_ekf(1,:);
+w_ekf = states_ekf(2,:);
+mu_ekf = states_ekf(3,:);
+
+s_ekf = model_param.r_e*w_ekf./U_ekf - 1;
+
+%% Data Visualization
 
 figure();
-plot(t,mu_ukf,t,mu*ones(length(t),1)); 
+% plot(t,mu_ukf); 
+plot(t,mu_ukf,t,mu_ekf,t,mu*ones(length(t),1)); 
 xlabel('Time [s]'); ylabel('\mu_{max}');
-legend('UKF','Measurement');
+legend('UKF','EKF','Measurement');
 grid on;
 
 figure();
-plot(t,U_ukf,t,U);
+% plot(t,U_ukf);
+plot(t,U_ukf,t,U_ekf,t,U);
 xlabel('Time [s]'); ylabel('U [m/s]');
-legend('UKF','Measurement');
+legend('UKF','EKF','Measurement');
+
+% Estimation Error
+mu_err_ukf = mu - mu_ukf;
+mu_err_ekf = mu - mu_ekf;
+figure
+plot(t,mu_err_ukf,t,mu_err_ekf);
+title('Estimation Error');
+xlabel('Time');
+ylabel('Error');
+legend('UKF','EKF');
+
+% Plot distribution of errors
+% PDF of Estimation Error
+intv = 0.0005;
+xvals = -.01:intv:.01;
+yvals = normpdf(xvals,0,sqrt(var_ukf(3,3,end)));
+% bins = 2 * xvals(end) / intv;
+% newDat = histBins(mu_err, bins, xvals(end));
+% newLen = length(xvals) - 1;
+
+figure
+% plot(xvals(1:newLen),newDat);
+histogram(mu_err_ukf,'Normalization','pdf','DisplayStyle','stairs');
+hold on
+histogram(mu_err_ekf,'Normalization','pdf','DisplayStyle','stairs');
+% plot(xvals(1:newLen),yvals(1:newLen));
+plot(xvals(1:end-1),yvals(1:end-1));
+legend('UKF','EKF','Theoretical PDF');
+xlabel('Range');
+ylabel('Frequency');
+ylim([0 20]);
+title('KF Estimation Error PDF');
 grid on;
 
 figure();
-plot(t,s_ukf,t,s);
+% plot(t,s_ukf);
+plot(t,s_ukf,t,s_ekf,t,s);
 xlabel('Time [s]'); ylabel('\kappa');
-ylim([-1.1,1.1]);
-legend('UKF','Measurement');
+ylim([-16,1.1]);
+legend('UKF','EKF','Measurement');
 grid on;
