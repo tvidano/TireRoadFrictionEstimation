@@ -65,7 +65,7 @@ if abs(U) < 1e-10
 %         U = -U;
 %     end
 end
-if abs(w) < 1e-10
+if w < 1e-10
     w = 1e-10;
 end
 if U < model_param.r_e*w

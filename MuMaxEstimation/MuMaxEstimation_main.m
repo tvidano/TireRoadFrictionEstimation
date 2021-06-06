@@ -20,10 +20,15 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
 model_param.Fz = 1.4*Fz;
 
+<<<<<<< HEAD
 Q = diag([1e-4,1e-3,1e-6]);%diag([3.1093,274.5482,0])
 model_param.Q = Q;
 R = diag([1e-6,1e-3]);
 model_param.R = R;
+=======
+model_param.Q = diag([1e-6,3.2e-1,1e-8]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-6,2.6e-5]);
+>>>>>>> stash
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -39,9 +44,9 @@ mu = 0.80;
 
 % To use measurements from high fidelity model 
 % without noise:
-muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+% muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
 % with noise: 
-% muData = matfile("noisy_mu" + num2str(mu,'%.2f') + ".mat");
+muData = matfile("noisy_mu" + num2str(mu,'%.2f') + ".mat");
 
 Tb = muData.Tb;    % brake torque
 Tw = muData.Tw;    % wheel torque (accel.)
@@ -70,11 +75,12 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-states_ukf(:,1) = [U(1),w(1),mu]';  % COL VEC
+mu0 = 0.7;
+states_ukf(:,1) = [U(1),w(1),mu0]';  % COL VEC
 var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
 
-states_ekf(:,1) = [U(1),w(1),mu]';
-var_ekf(:,:,1) = zeros(3,3);
+states_ekf(:,1) = [U(1),w(1),mu0]';
+var_ekf(:,:,1) = zeros(3);
 
 %% Implement UKF, EKF
 for k = 2:1:length(t)
@@ -175,7 +181,7 @@ subplot(4,1,2);
 plot(t,U_ukf,t,U_mat,t,U);ylabel('U');
 legend('UKF','MATLAB','Measurement');
 subplot(4,1,3);
-plot(t,torque);ylabel('torque');
+plot(t,w_ukf,t,w);ylabel('\omega');
 subplot(4,1,4);
 plot(t,s_ukf,t,s_mat,t,s);ylabel('slip');ylim([-2,0.2]);
 legend('UKF','MATLAB','Measurement');

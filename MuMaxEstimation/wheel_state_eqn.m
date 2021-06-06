@@ -52,6 +52,9 @@ end
 % Unpack outputs:
 U = y(:,1); 
 w = y(:,2);
+if w(end) < 0
+    w(end) = 1e-10;
+end
 
 % Pack current states:
 x_hat = [U(end),w(end),mu]';
