@@ -259,3 +259,10 @@ ylim([-16,1.1]);
 % legend('UKF','EKF','Measurement');
 legend('UKF','MATLAB','Measurement');
 grid on;
+
+figure
+% plot residuals from MATLAB UKF
+plot(t,res_matlab);
+title('MATLAB UKF Residuals');
+xlabel('Time');
+ylabel('Measured output - Predicted output');
