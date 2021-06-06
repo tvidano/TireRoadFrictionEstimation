@@ -24,8 +24,15 @@ for i = 1:length(mus)
     s = muData{iStart:iEnd,4};
     Fx = muData{iStart:iEnd,5};
     Tb = muData{iStart:iEnd,6};
+    % Remove simulation artifacts:
+    Tb(Tb > 1e4 | Tb < -1e4) = 0;    
     w = muData{iStart:iEnd,7};
     Tw = muData{iStart:iEnd,9};
+    % Remove simulation artifacts:
+    Tw(Tw > 1e4 | Tw < -1e4) = 0;
+    b = (1/30)*ones(1,30);
+    Tw = filter(b,1,Tw);
+    
     save(fullfile(dataPath, "mu" + mus(i) + ".mat"),'t','U','s','Fx',...
         'Tb','w','Tw');
     figure();subplot(2,1,1);
@@ -33,4 +40,6 @@ for i = 1:length(mus)
     ylim([-1.1,1.1]);
     subplot(2,1,2);
     plot(t,U); xlabel('t [s]'); ylabel('Long. Velocity [m/s]');
+    figure();
+    plot(t,Tb,t,Tw);
 end

@@ -35,26 +35,21 @@ mu = xprev(3);
 model_param.mu = mu; % Pass to ODE
 
 % RK 4 Integration to Estimate Next Discrete State:
-% h = (tk - tj)/50;
-% t = tj:h:tk;
-% y = zeros(2,length(t));
-% y(:,1) = [U;w];
-% 
-% for i=1:(length(t)-1)
-%     K1 = wheelode(t(i),y(:,i),model_param,inputs);
-%     K2 = wheelode(t(i)+0.5*h,y(:,i)+0.5*h*K1,model_param,inputs);
-%     K3 = wheelode(t(i)+0.5*h,y(:,i)+0.5*h*K2,model_param,inputs);
-%     K4 = wheelode(t(i)+h,y(:,i)+h*K3,model_param,inputs);
-%     
-%     y(:,i+1) = y(i) + (1/6)*(K1+2*K2+2*K3+K4)*h;
-% end
-
-tspan = [tj;tk];
+h = 2e-3;
+tspan = tj:h:tk;
 y0 = [U;w];
-
-options = model_param.options;
-[t,y] = ode23(@(t,y) wheelode(t,y,model_param,inputs), tspan, y0, options);
-mu = mu + 1e-6*rand;
+t = tspan;
+y(1,:) = y0;
+for i=1:(length(t)-1)
+    K1 = wheelode(t(i),y(i,:),model_param,inputs)';
+    K2 = wheelode(t(i)+0.5*h,y(i,:)+0.5*h*K1,model_param,inputs)';
+    K3 = wheelode(t(i)+0.5*h,y(i,:)+0.5*h*K2,model_param,inputs)';
+    K4 = wheelode(t(i)+h,y(i,:)+h*K3,model_param,inputs)';
+    
+    y(i+1,:) = y(i,:) + (1/6)*(K1+2*K2+2*K3+K4)*h;
+    dy = wheelode(t(i+1),y(i+1,:),model_param,inputs)';
+    model_param.dU = dy(1);
+end
 
 % Unpack outputs:
 U = y(:,1); 

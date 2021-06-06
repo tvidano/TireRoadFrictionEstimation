@@ -22,7 +22,11 @@ N = model_param.N;      % Number of states
 M = model_param.M;      % Number of output measurements
 
 %% CHOLESKY DECOMP, NEW SET OF SIGMA POINTS
-choles = chol(N*PK);
+try
+    choles = chol(N*PK);
+catch
+    choles = chol(1e-8*eye(1) + N*PK);
+end
 
 sigX_HAT = zeros(N,2*N);
 for i = 1:1:N   % x[k|k-1]

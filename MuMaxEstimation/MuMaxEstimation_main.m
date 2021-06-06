@@ -18,7 +18,7 @@ model_param.r_e = 0.4013;       % Effective Tire Radius [m]; 0.37338;
 model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
-model_param.Fz = 1.5*Fz;
+model_param.Fz = 1.1*Fz;
 
 model_param.Q = diag([1e-4,1e-4,0]);%diag([3.1093,274.5482,0])
 model_param.R = diag([1e-3,1e-3]);

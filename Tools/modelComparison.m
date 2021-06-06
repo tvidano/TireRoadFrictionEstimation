@@ -28,7 +28,7 @@ r_e = 0.4013;       % Effective Tire Radius [m]; 0.37338;
 J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 m = 2714.3;         % Vehicle Mass [kg]
 Fz = m*9.81/4;      % Tire Normal Force [N]
-Fz = Fz*1.5;        % Weight shift to front wheels when braking
+Fz = Fz*1.4;        % Weight shift to front wheels when braking
 
 %% Simulate single wheel model with Euler Integration
 
@@ -91,43 +91,68 @@ Fz = Fz*1.5;        % Weight shift to front wheels when braking
 % histogram(err_w,'Normalization','pdf');
 % title('Wheel Angular Velocity [m/s]');
 % sgtitle("Euler Model Errors (pdf) mu = " + num2str(mu,'%.2f'));
+%% 
+% Twm_clean = Twm;
+% Twm_clean(Twm > 1e4 | Twm < -1e4) = [0];
+% fs = 2e3;
+% windowSize = 30;
+% b = (1/windowSize)*ones(1,windowSize);
+% a = 1;
+% Tw_lp = filter(b,a,Twm_clean);
+% plot(tm,Twm,tm,Tw_lp); legend('un-filtered','filtered');
+% ylim([-5000,5000]);
 
 %% Simulate single wheel model with ODE45 Integration
 model_param = struct('C',C,'B',B,'E',E,'r_e',r_e,...
                      'J',J,'m',m,'Fz',Fz,'mu',0.8);
-torque =  - Tbm; % Twm
+torque = -Tbm; % zeros(length(tm),1)
 inputs = struct('time',tm,'torque',torque);
 
 % Initialization:
-tspan = tm(1):2e-3:tm(end);
+h = 2e-3;
+tspan = tm(1):h:tm(end);
 y0 = [Um(1), wm(1)];
+% model_param.dU = -1;
+% model_param.brake = true;
 
 % Simulation:
-options = odeset('RelTol',1e-8);
-[t,y] = ode23(@(t,y) wheelode(t,y,model_param,inputs), tspan, y0, options);
+t = tspan;
+y(1,:) = y0;
+for i=1:(length(t)-1)
+    K1 = wheelode(t(i),y(i,:),model_param,inputs)';
+    K2 = wheelode(t(i)+0.5*h,y(i,:)+0.5*h*K1,model_param,inputs)';
+    K3 = wheelode(t(i)+0.5*h,y(i,:)+0.5*h*K2,model_param,inputs)';
+    K4 = wheelode(t(i)+h,y(i,:)+h*K3,model_param,inputs)';
+    
+    y(i+1,:) = y(i,:) + (1/6)*(K1+2*K2+2*K3+K4)*h;
+    dy = wheelode(t(i+1),y(i+1,:),model_param,inputs)';
+%     model_param.dU = dy(1);
+end
 
 % Get extra outputs:
-for i = 1:length(t)
-    [dy(i,:), ext(i,:)] = wheelode(t(i),y(i,:),model_param,inputs);
-end
+% for i = 1:length(t)
+%     [dy(i,:), ext(i,:)] = wheelode(t(i),y(i,:),model_param,inputs);
+% end
 
 % Unpack outputs:
 U = y(:,1);
 omega = y(:,2);
-T = ext(:,1);
+% T = ext(:,1);
 s = (r_e*omega./U - 1);
 
 % Plot trajectories
-figure();subplot(3,1,1);
-plot(t,U,tm,Um); title('Euler Longitudinal Velocity'); 
+figure();subplot(4,1,1);
+plot(t,U,tm,Um); title('Euler Longitudinal Velocity'); grid on;
 legend('R-K 4,5','Measured');xlabel('Time [s]'); ylabel('U [m/s]');
-subplot(3,1,2);
-plot(t,omega,tm,wm); title('Euler Angular Velocity'); 
+subplot(4,1,2);
+plot(t,omega,tm,wm); title('Euler Angular Velocity'); grid on;
 legend('R-K 4,5','Measured');xlabel('Time [s]'); ylabel('\omega [rad/s]');
-subplot(3,1,3);
-plot(t,s,tm,sm); title('R-K 4,5 Slip');
+subplot(4,1,3);
+plot(t,s,tm,sm); title('R-K 4,5 Slip');grid on;
 legend('R-K 4,5','Measured'); xlabel('Time [s]'); ylabel('slip');
 sgtitle("R-K 4,5 Model Trajectories (pdf) mu = " + num2str(mu,'%.2f'));
+subplot(4,1,4);
+plot(tm,torque); title('Torque Input');grid on;
 
 % Plot Errors:
 for i = 1:length(tm)
