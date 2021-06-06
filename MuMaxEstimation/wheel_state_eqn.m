@@ -47,14 +47,17 @@ for i=1:(length(t)-1)
     K4 = wheelode(t(i)+h,y(i,:)+h*K3,model_param,inputs)';
     
     y(i+1,:) = y(i,:) + (1/6)*(K1+2*K2+2*K3+K4)*h;
+    if y(i+1,2) < 0
+        y(i+1,2) = 1e-10;
+    end
 end
 
 % Unpack outputs:
 U = y(:,1); 
 w = y(:,2);
-if w(end) < 0
-    w(end) = 1e-10;
-end
+% if w(end) < 0
+%     w(end) = 1e-10;
+% end
 
 % Pack current states:
 x_hat = [U(end),w(end),mu]';

@@ -22,10 +22,10 @@ model_param.Fz = 1.4*Fz;
 
 Q = diag([1e-4,1e-3,1e-6]);%diag([3.1093,274.5482,0])
 model_param.Q = Q;
-R = diag([1e-6,1e-3]);
+R = diag([1e-6,1e-4]);
 model_param.R = R;
 model_param.Q = diag([1e-6,3.2e-1,1e-8]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-6,2.6e-5]);
+model_param.R = diag([1e-3,1e-1]);
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -187,94 +187,95 @@ s_mat = model_param.r_e*w_mat./U_mat - 1;
 
 %% Data Visualization
 figure();subplot(4,1,1);
-plot(t,mu_ukf,t,mu_mat,t,mu*ones(length(t),1));ylabel('mu');ylim([0,1]);
-legend('UKF','MATLAB','Measurement');
+plot(t,mu_ukf,t,mu*ones(length(t),1));ylabel('mu');ylim([0,1]);
+legend('UKF','Measurement');
 subplot(4,1,2);
-plot(t,U_ukf,t,U_mat,t,U);ylabel('U');
-legend('UKF','MATLAB','Measurement');
+plot(t,U_ukf,t,U);ylabel('U');
+legend('UKF','Measurement');
 subplot(4,1,3);
 plot(t,w_ukf,t,w);ylabel('\omega');
+legend('UKF','Measurement');
 subplot(4,1,4);
-plot(t,s_ukf,t,s_mat,t,s);ylabel('slip');ylim([-2,0.2]);
-legend('UKF','MATLAB','Measurement');
+plot(t,s_ukf,t,s);ylabel('slip');ylim([-2,0.2]);
+legend('UKF','Measurement');
 
-figure();
-% plot(t,mu_ekf,t,mu_ukf,t,mu*ones(length(t),1)); 
-plot(t,mu_mat,t,mu_ukf,t,mu*ones(length(t),1)); 
-xlabel('Time [s]'); ylabel('\mu_{max}');
-% legend('EKF','UKF','Measurement');
-legend('MATLAB','UKF','Measurement');
-grid on;
-
-figure();
-% plot(t,U_ukf,t,U_ekf,t,U);
-plot(t,U_ukf,t,U_mat,t,U);
-xlabel('Time [s]'); ylabel('U [m/s]');
-% legend('UKF','EKF','Measurement');
-legend('UKF','MATLAB','Measurement');
-
-% Estimation Error
-mu_err_ukf = mu - mu_ukf;
-% mu_err_ekf = mu - mu_ekf;
-mu_err_mat = mu - mu_mat;
-figure
-% plot(t,mu_err_ukf,t,mu_err_ekf);
-plot(t,mu_err_ukf,t,mu_err_mat);
-title('Estimation Error');
-xlabel('Time');
-ylabel('Error');
-% legend('UKF','EKF');
-legend('UKF','MATLAB');
-
+% figure();
+% % plot(t,mu_ekf,t,mu_ukf,t,mu*ones(length(t),1)); 
+% plot(t,mu_mat,t,mu_ukf,t,mu*ones(length(t),1)); 
+% xlabel('Time [s]'); ylabel('\mu_{max}');
+% % legend('EKF','UKF','Measurement');
+% legend('MATLAB','UKF','Measurement');
+% grid on;
+% 
+% figure();
+% % plot(t,U_ukf,t,U_ekf,t,U);
+% plot(t,U_ukf,t,U_mat,t,U);
+% xlabel('Time [s]'); ylabel('U [m/s]');
+% % legend('UKF','EKF','Measurement');
+% legend('UKF','MATLAB','Measurement');
+% 
 % % Estimation Error
-% mu_err = mu - mu_ukf; 
+% mu_err_ukf = mu - mu_ukf;
+% % mu_err_ekf = mu - mu_ekf;
+% mu_err_mat = mu - mu_mat;
 % figure
-% plot(t,mu_err);
+% % plot(t,mu_err_ukf,t,mu_err_ekf);
+% plot(t,mu_err_ukf,t,mu_err_mat);
 % title('Estimation Error');
 % xlabel('Time');
 % ylabel('Error');
-
-% Plot distribution of errors
-% PDF of Estimation Error
-intv = 0.05;
-xvals = -7:intv:7;
-yvals_ukf = normpdf(xvals,0,sqrt(var_ukf(3,3,end)));
-yvals_mat = normpdf(xvals,0,sqrt(var_mat(3,3,end)));
-% yvals_ekf = normpdf(xvals,0,sqrt(var_ekf(3,3,end)));
-% bins = 2 * xvals(end) / intv;
-% newDat = histBins(mu_err, bins, xvals(end));
-% newLen = length(xvals) - 1;
-
-figure
-% plot(xvals(1:newLen),newDat);
-histogram(mu_err_ukf,'Normalization','pdf','DisplayStyle','stairs');
-hold on
-% histogram(mu_err_ekf,'Normalization','pdf','DisplayStyle','stairs');
-histogram(mu_err_mat,'Normalization','pdf','DisplayStyle','stairs');
-% plot(xvals(1:newLen),yvals(1:newLen));
-plot(xvals(1:end-1),yvals_ukf(1:end-1));
-% plot(xvals(1:end-1),yvals_ekf(1:end-1));
-plot(xvals(1:end-1),yvals_mat(1:end-1));
-% legend('UKF','EKF','Theoretical UKF PDF','Theoretical EKF PDF');
-legend('UKF','MATLAB','Theoretical UKF PDF','Theoretical MATLAB PDF');
-xlabel('Range');
-ylabel('Frequency');
-ylim([0 20]);
-title('KF Estimation Error PDF');
-grid on;
-
-figure();
-% plot(t,s_ukf,t,s_ekf,t,s);
-plot(t,s_ukf,t,s_mat,t,s);
-xlabel('Time [s]'); ylabel('\kappa');
-ylim([-16,1.1]);
-% legend('UKF','EKF','Measurement');
-legend('UKF','MATLAB','Measurement');
-grid on;
-
-figure
-% plot residuals from MATLAB UKF
-plot(t,res_matlab);
-title('MATLAB UKF Residuals');
-xlabel('Time');
-ylabel('Measured output - Predicted output');
+% % legend('UKF','EKF');
+% legend('UKF','MATLAB');
+% 
+% % % Estimation Error
+% % mu_err = mu - mu_ukf; 
+% % figure
+% % plot(t,mu_err);
+% % title('Estimation Error');
+% % xlabel('Time');
+% % ylabel('Error');
+% 
+% % Plot distribution of errors
+% % PDF of Estimation Error
+% intv = 0.05;
+% xvals = -7:intv:7;
+% yvals_ukf = normpdf(xvals,0,sqrt(var_ukf(3,3,end)));
+% yvals_mat = normpdf(xvals,0,sqrt(var_mat(3,3,end)));
+% % yvals_ekf = normpdf(xvals,0,sqrt(var_ekf(3,3,end)));
+% % bins = 2 * xvals(end) / intv;
+% % newDat = histBins(mu_err, bins, xvals(end));
+% % newLen = length(xvals) - 1;
+% 
+% figure
+% % plot(xvals(1:newLen),newDat);
+% histogram(mu_err_ukf,'Normalization','pdf','DisplayStyle','stairs');
+% hold on
+% % histogram(mu_err_ekf,'Normalization','pdf','DisplayStyle','stairs');
+% histogram(mu_err_mat,'Normalization','pdf','DisplayStyle','stairs');
+% % plot(xvals(1:newLen),yvals(1:newLen));
+% plot(xvals(1:end-1),yvals_ukf(1:end-1));
+% % plot(xvals(1:end-1),yvals_ekf(1:end-1));
+% plot(xvals(1:end-1),yvals_mat(1:end-1));
+% % legend('UKF','EKF','Theoretical UKF PDF','Theoretical EKF PDF');
+% legend('UKF','MATLAB','Theoretical UKF PDF','Theoretical MATLAB PDF');
+% xlabel('Range');
+% ylabel('Frequency');
+% ylim([0 20]);
+% title('KF Estimation Error PDF');
+% grid on;
+% 
+% figure();
+% % plot(t,s_ukf,t,s_ekf,t,s);
+% plot(t,s_ukf,t,s_mat,t,s);
+% xlabel('Time [s]'); ylabel('\kappa');
+% ylim([-16,1.1]);
+% % legend('UKF','EKF','Measurement');
+% legend('UKF','MATLAB','Measurement');
+% grid on;
+% 
+% figure
+% % plot residuals from MATLAB UKF
+% plot(t,res_matlab);
+% title('MATLAB UKF Residuals');
+% xlabel('Time');
+% ylabel('Measured output - Predicted output');

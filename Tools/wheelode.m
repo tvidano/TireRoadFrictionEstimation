@@ -61,24 +61,15 @@ end
 % Prevent Divide by Zero:
 if abs(U) < 1e-10
     U = 1e-10;
-%     if dU < 0
-%         U = -U;
-%     end
 end
 if w < 1e-10
     w = 1e-10;
 end
+
 if U < model_param.r_e*w
-    dU = 1;
-else
-    dU = -1;
-end
-if dU < 0
-    kappa = -(U - r_e*w)/U;
-elseif dU >= 0
     kappa = (r_e*w - U)/(r_e*w);
 else
-    kappa = 0;
+    kappa = -(U - r_e*w)/U;
 end
 
 [Fx,~,~,~] = PacSimple(Tire,Fz,0,kappa);

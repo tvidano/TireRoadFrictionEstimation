@@ -32,6 +32,7 @@ for i = 1:length(mus)
     Tw(Tw > 1e4 | Tw < -1e4) = 0;
     b = (1/30)*ones(1,30);
     Tw = filter(b,1,Tw);
+    w(w < -40) = 0;
     % Plot signals:
     figure
     ax1 = subplot(4,1,1);

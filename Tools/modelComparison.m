@@ -125,8 +125,9 @@ for i=1:(length(t)-1)
     K4 = wheelode(t(i)+h,y(i,:)+h*K3,model_param,inputs)';
     
     y(i+1,:) = y(i,:) + (1/6)*(K1+2*K2+2*K3+K4)*h;
-    dy = wheelode(t(i+1),y(i+1,:),model_param,inputs)';
-%     model_param.dU = dy(1);
+    if y(i+1,2) < 0
+        y(i+1,2) = 1e-10;
+    end
 end
 
 % Get extra outputs:
