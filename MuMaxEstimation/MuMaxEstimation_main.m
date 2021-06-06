@@ -32,11 +32,11 @@ model_param.ts = 2e-3;
 
 % -------------------------------------------------------------------------
 % Select which mu to load measurements:
-mu = 0.80;
+mu_list = [0.80]; % Scalar or vector
 % mu = 0.50;
 % mu = 0.30;
 % -------------------------------------------------------------------------
-
+for mu = mu_list
 % Collect measurement data:
 
 % To use measurements from high fidelity model 
@@ -198,6 +198,8 @@ legend('UKF','Measurement');
 subplot(4,1,4);
 plot(t,s_ukf,t,s);ylabel('slip');ylim([-2,0.2]);
 legend('UKF','Measurement');
+title(sprintf('UKF Simulation Results when $\mu$ = %d',mu))
+end
 
 % figure();
 % % plot(t,mu_ekf,t,mu_ukf,t,mu*ones(length(t),1)); 
