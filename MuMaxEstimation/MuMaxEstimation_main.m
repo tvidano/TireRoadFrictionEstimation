@@ -123,3 +123,5 @@ legend('Estimation Error Data','Theoretical PDF');
 xlabel('Range');
 ylabel('Frequency');
 title('Estimation Error PDF');
+
+% For Auto-save, can utilize saveas(g,sprintf('Figure_%d.png',i)) with a loop.
