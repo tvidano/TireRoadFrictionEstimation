@@ -1,4 +1,4 @@
-function [yhatk] = batt_output_eqn(model_param,xbar,uprev)
+function [yhatk] = batt_output_eqn(xbar,uprev,model_param)
 % Calls OUTPUT EQUATION
 %
 % INPUTS: 
