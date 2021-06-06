@@ -20,15 +20,12 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
 model_param.Fz = 1.4*Fz;
 
-<<<<<<< HEAD
 Q = diag([1e-4,1e-3,1e-6]);%diag([3.1093,274.5482,0])
 model_param.Q = Q;
 R = diag([1e-6,1e-3]);
 model_param.R = R;
-=======
 model_param.Q = diag([1e-6,3.2e-1,1e-8]);%diag([3.1093,274.5482,0])
 model_param.R = diag([1e-6,2.6e-5]);
->>>>>>> stash
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -68,7 +65,6 @@ model_param.torque = torque;
 model_param.options = odeset('RelTol',1e-3);
 
 %% EKF/UKF Setup: 
-
 % FOR EKF: the following are constant for all k 
 C_pr = [1 0 0; 0 1 0];
 E_pr = eye(3);
@@ -82,40 +78,56 @@ var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
 states_ekf(:,1) = [U(1),w(1),mu0]';
 var_ekf(:,:,1) = zeros(3);
 
+t_current = t(1);
+t_final = t(end);
+while t_current < t_final
+    
+current_i = find(t_current==t);
+if abs(s(current_i)) < 4e-3
+    % Update initial values
+    mu0 = 0.7;
+    states_ukf(:,current_i) = [U(current_i),w(current_i),mu0]';
+    var_ukf(:,:,current_i) = zeros(3);  % N x N MATRIX
+
+    states_ekf(:,current_i) = states_ukf(:,current_i);
+    var_ekf(:,:,current_i) = zeros(3);
+    
+    % Update current time
+    t_current = t(current_i+1);
+else
 %% Implement UKF, EKF
-for k = 2:1:length(t)
-    % Determine sampling interval
-    j = k - 1;
-    
-    % Get measurement yk
-    yk(:,k) = [U(k),w(k)]';
-    
-    % model prediction step, UKF
-    model_param.tk = t(k);
-    model_param.tj = t(j);
-    [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(:,j),var_ukf(:,:,j),...
-                               torque(j),@wheel_state_eqn);
-    
-    % model prediction step, EKF
-    [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(:,j),var_ekf(:,:,j),...
-                                torque(j),E_pr,@wheel_state_eqn);
-    
-    % measurement update step, UKF
-    [states_ukf(:,k),var_ukf(:,:,k)] = ukf_upd(model_param, xk_ukf,... 
-                                pk_ukf, torque(j), yk(:,k), @wheel_output_eqn);
-                            
-    % measurement update step, EKF
-    [states_ekf(:,k),var_ekf(:,:,k)] = ekf_upd(model_param, xk_ekf, pk_ekf,...
-                                torque(k), yk(:,k), C_pr, F_pr, @wheel_output_eqn);
+    for k = current_i:length(t)
+        % Determine sampling interval
+        j = k - 1;
 
-    if abs(s(k)) < 1e-2
-%         states_ukf(3,k) = mu;
-%         var_ukf(3,3,k) = 1e-6;
-%         states_ekf(3,k) = mu;
-%         var_ekf(3,3,k) = 1e-6;
+        % Get measurement yk
+        yk(:,k) = [U(k),w(k)]';
+
+        % model prediction step, UKF
+        model_param.tk = t(k);
+        model_param.tj = t(j);
+        [xk_ukf,pk_ukf] = ukf_pred(model_param,states_ukf(:,j),var_ukf(:,:,j),...
+                                   torque(j),@wheel_state_eqn);
+
+        % model prediction step, EKF
+        [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(:,j),var_ekf(:,:,j),...
+                                    torque(j),E_pr,@wheel_state_eqn);
+
+        % measurement update step, UKF
+        [states_ukf(:,k),var_ukf(:,:,k)] = ukf_upd(model_param, xk_ukf,... 
+                                    pk_ukf, torque(j), yk(:,k), @wheel_output_eqn);
+
+        % measurement update step, EKF
+        [states_ekf(:,k),var_ekf(:,:,k)] = ekf_upd(model_param, xk_ekf, pk_ekf,...
+                                    torque(k), yk(:,k), C_pr, F_pr, @wheel_output_eqn);
+        if abs(s(k)) < 4e-3
+            t_current = t(k);
+            break;
+        end
     end
+    t_current = t(k);
 end
-
+end
 % Unpack States: UKF
 U_ukf = states_ukf(1,:);
 w_ukf = states_ukf(2,:);
