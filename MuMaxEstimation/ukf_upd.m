@@ -25,7 +25,7 @@ M = model_param.M;      % Number of output measurements
 try
     choles = chol(N*PK);
 catch
-    choles = chol(1e-8*eye(1) + N*PK);
+    choles = chol(1e-8*eye(N) + N*PK);
 end
 
 sigX_HAT = zeros(N,2*N);

@@ -54,7 +54,7 @@ U = y(:,1);
 w = y(:,2);
 
 % Pack current states:
-x_hat = [U(end),w(end),mu(end)]';
+x_hat = [U(end),w(end),mu]';
 
 end
 

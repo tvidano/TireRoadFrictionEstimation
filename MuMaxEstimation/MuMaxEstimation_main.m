@@ -20,8 +20,8 @@ model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
 model_param.Fz = 1.4*Fz;
 
-model_param.Q = diag([1e-4,1e-4,1e-3]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-4,1e-1]);
+model_param.Q = diag([1e-4,1e-3,1e-6]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-6,1e-3]);
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -35,8 +35,12 @@ mu = 0.80;
 
 % Collect measurement data:
 
-% To use measurements from high fidelity model:
+% To use measurements from high fidelity model 
+% without noise:
 muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+% with noise: 
+% muData = matfile("noisy_mu" + num2str(mu,'%.2f') + ".mat");
+
 Tb = muData.Tb;    % brake torque
 Tw = muData.Tw;    % wheel torque (accel.)
 torque = - Tb; 
@@ -64,7 +68,7 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-states_ukf(:,1) = [U(1),w(1),.7]';  % COL VEC
+states_ukf(:,1) = [U(1),w(1),mu]';  % COL VEC
 var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
 
 states_ekf(:,1) = [U(1),w(1),mu]';
@@ -88,7 +92,6 @@ for k = 2:1:length(t)
     [xk_ekf,pk_ekf] = ekf_pred(model_param,states_ekf(:,j),var_ekf(:,:,j),...
                                 torque(j),E_pr,@wheel_state_eqn);
     
-    
     % measurement update step, UKF
     [states_ukf(:,k),var_ukf(:,:,k)] = ukf_upd(model_param, xk_ukf,... 
                                 pk_ukf, torque(j), yk, @wheel_output_eqn);
@@ -96,7 +99,13 @@ for k = 2:1:length(t)
     % measurement update step, EKF
     [states_ekf(:,k),var_ekf(:,:,k)] = ekf_upd(model_param, xk_ekf, pk_ekf,...
                                 torque(k), yk, C_pr, F_pr, @wheel_output_eqn);
-    
+
+    if abs(s(k)) < 1e-2
+%         states_ukf(3,k) = mu;
+%         var_ukf(3,3,k) = 1e-6;
+%         states_ekf(3,k) = mu;
+%         var_ekf(3,3,k) = 1e-6;
+    end
 end
 
 % Unpack States: UKF
@@ -114,14 +123,17 @@ mu_ekf = states_ekf(3,:);
 s_ekf = model_param.r_e*w_ekf./U_ekf - 1;
 
 %% Data Visualization
-figure();subplot(3,1,1);
-plot(t,mu_ukf,t,mu*ones(length(t),1));ylabel('mu');
+figure();subplot(4,1,1);
+plot(t,mu_ukf,t,mu*ones(length(t),1));ylabel('mu');ylim([0,1]);
 legend('UKF','Measurement');
-subplot(3,1,2);
+subplot(4,1,2);
 plot(t,U_ukf,t,U);ylabel('U');
 legend('UKF','Measurement');
-subplot(3,1,3);
+subplot(4,1,3);
 plot(t,torque);ylabel('torque');
+subplot(4,1,4);
+plot(t,s_ukf,t,s);ylabel('slip');ylim([-2,0.2]);
+legend('UKF','Measurement');
 
 figure();
 % plot(t,mu_ukf); 
