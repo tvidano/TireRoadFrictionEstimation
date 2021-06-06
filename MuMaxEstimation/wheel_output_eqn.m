@@ -1,4 +1,4 @@
-function [y_hat] = wheel_output_eqn(model_param,xprev,uprev)
+function [y_hat] = wheel_output_eqn(xprev,uprev,model_param)
 %WHEEL_OUTPUT_EQN Calls output equation for wheel model estimation.
 %
 % INPUTS: 

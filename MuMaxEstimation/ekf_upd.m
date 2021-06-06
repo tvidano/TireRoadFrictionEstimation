@@ -25,7 +25,7 @@ R = model_param.R;
 LK = PK*C_pr.'/(C_pr*PK*C_pr.' + F_pr*R*F_pr.');
 
 % measurement update --> XKK
-XKK = X_HATK + LK*(yk - output_eqn(model_param, X_HATK, uk));
+XKK = X_HATK + LK*(yk - output_eqn(X_HATK, uk, model_param));
 
 % measure update --> PKK
 PKK = PK - LK*C_pr*PK;

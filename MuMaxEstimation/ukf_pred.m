@@ -39,7 +39,7 @@ end
 x_hatk = zeros(N,2*N);
 for j = 1:1:2*N   % [k|k-1]
     % progagate each sig pt
-    x_hatk(:,j) = state_eqn(model_param,sigX_HAT(:,j),uprev); 
+    x_hatk(:,j) = state_eqn(sigX_HAT(:,j),uprev,model_param); 
     
 end
 

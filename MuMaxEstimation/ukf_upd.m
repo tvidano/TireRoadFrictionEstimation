@@ -41,7 +41,7 @@ end
 y_hatk = zeros(M,2*N);
 for j = 1:1:2*N   % y[k|k-1]
     % progagate each sig pt
-    y_hatk(:,j) = output_eqn(model_param, sigX_HAT(:,j), uprev); 
+    y_hatk(:,j) = output_eqn(sigX_HAT(:,j), uprev, model_param); 
     
 end
 

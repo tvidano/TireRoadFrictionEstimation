@@ -23,7 +23,7 @@ ts = model_param.tk - model_param.tj;  % to accomodate variable time step
 Apr = A_pr(model_param,X_HAT,ts);
 
 % Propagate state estimate through nonlinear state equation
-XK = state_eqn(model_param,X_HAT,uprev); 
+XK = state_eqn(X_HAT,uprev,model_param); 
 
 % Propagate variance
 PK = (Apr * P * Apr.') + (Epr * Q * Epr.');

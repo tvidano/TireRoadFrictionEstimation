@@ -1,4 +1,4 @@
-function [x_hat] = wheel_state_eqn(model_param,xprev,uprev)
+function [x_hat] = wheel_state_eqn(xprev,uprev,model_param)
 %WHEEL_STATE_EQN Calls state equation for wheel model estimation.
 %
 % INPUTS: 
