@@ -18,10 +18,10 @@ model_param.r_e = 0.4013;       % Effective Tire Radius [m]; 0.37338;
 model_param.J = 2.5462;         % Wheel Rotational Inertia [kg-m^2]
 model_param.m = 2714.3;         % Vehicle Mass [kg]
 Fz = model_param.m*9.81/4;      % Tire Normal Force [N]
-model_param.Fz = 1.1*Fz;
+model_param.Fz = 1.4*Fz;
 
-model_param.Q = diag([1e-4,1e-4,0]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-3,1e-3]);
+model_param.Q = diag([1e-4,1e-4,1e-3]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-4,1e-1]);
 model_param.N = 3;
 model_param.M = 2;
 model_param.ts = 2e-3;
@@ -36,14 +36,14 @@ mu = 0.80;
 % Collect measurement data:
 
 % To use measurements from high fidelity model:
-% muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
-% Tb = muData.Tb;    % brake torque
-% Tw = muData.Tw;    % wheel torque (accel.)
-% torque = Tw - Tb; 
+muData = matfile("mu" + num2str(mu,'%.2f') + ".mat");
+Tb = muData.Tb;    % brake torque
+Tw = muData.Tw;    % wheel torque (accel.)
+torque = - Tb; 
 
 % To use measurements from low fidelity model:
-muData = matfile("LF_mu" + num2str(mu,'%.2f') + ".mat");
-torque = muData.T;
+% muData = matfile("LF_mu" + num2str(mu,'%.2f') + ".mat");
+% torque = muData.T;
 
 % Measurement data from either model:
 t = muData.t;      % time
@@ -64,14 +64,13 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-states_ukf(:,1) = [U(1),w(1),mu]';  % COL VEC
+states_ukf(:,1) = [U(1),w(1),.7]';  % COL VEC
 var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
 
 states_ekf(:,1) = [U(1),w(1),mu]';
 var_ekf(:,:,1) = zeros(3,3);
 
 %% Implement UKF, EKF
-
 for k = 2:1:length(t)
     % Determine sampling interval
     j = k - 1;
@@ -115,6 +114,14 @@ mu_ekf = states_ekf(3,:);
 s_ekf = model_param.r_e*w_ekf./U_ekf - 1;
 
 %% Data Visualization
+figure();subplot(3,1,1);
+plot(t,mu_ukf,t,mu*ones(length(t),1));ylabel('mu');
+legend('UKF','Measurement');
+subplot(3,1,2);
+plot(t,U_ukf,t,U);ylabel('U');
+legend('UKF','Measurement');
+subplot(3,1,3);
+plot(t,torque);ylabel('torque');
 
 figure();
 % plot(t,mu_ukf); 

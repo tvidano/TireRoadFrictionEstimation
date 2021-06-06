@@ -45,12 +45,12 @@ w = y(2);
 %% Unpack inputs:
 tm = inputs.time;
 T = inputs.torque;
-% if length(tm) > 2
-%     torque = interp1(tm,T,t);
-% else
-%     torque = (T(2) - T(1))/(tm(2) - tm(1))*(t - tm(1)) + T(1);
-% end
-torque = interp1(tm,T,t);
+if length(tm) > 2
+    torque = interp1(tm,T,t);
+else
+    torque = (T(2) - T(1))/(tm(2) - tm(1))*(t - tm(1)) + T(1);
+end
+% torque = interp1(tm,T,t);
 % torque = -2000;
 
 %% Define Helper Functions:
