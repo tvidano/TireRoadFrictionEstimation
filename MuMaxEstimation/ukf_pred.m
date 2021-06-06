@@ -20,8 +20,8 @@ Q = model_param.Q;
 N = model_param.N;
 
 %% Compute Cholesky Decomp, Form 2*N Sigma Points
-if P == zeros(3,3)
-    choles = zeros(3,3);
+if P == zeros(N,N)
+    choles = zeros(N,N);
 else
     choles = chol(N*P);
 end

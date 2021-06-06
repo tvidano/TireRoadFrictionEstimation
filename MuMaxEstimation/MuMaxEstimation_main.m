@@ -146,10 +146,18 @@ xlabel('Time');
 ylabel('Error');
 legend('UKF','EKF');
 
+% Estimation Error
+mu_err = mu - mu_ukf; 
+figure
+plot(t,mu_err);
+title('Estimation Error');
+xlabel('Time');
+ylabel('Error');
+
 % Plot distribution of errors
 % PDF of Estimation Error
-intv = 0.0005;
-xvals = -.01:intv:.01;
+intv = 0.05;
+xvals = -7:intv:7;
 yvals = normpdf(xvals,0,sqrt(var_ukf(3,3,end)));
 % bins = 2 * xvals(end) / intv;
 % newDat = histBins(mu_err, bins, xvals(end));

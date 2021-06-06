@@ -92,16 +92,16 @@ ylabel('Error');
 intv = 0.00005;
 xvals = -0.02:intv:0.02;
 yvals = normpdf(xvals,0,sqrt(P_soc(end)));
-% bins = 2 * xvals(end) / intv;
-% newDat = histBins(ek, bins, xvals(end));
-% newLen = length(xvals) - 1;
+bins = 2 * xvals(end) / intv;
+newDat = histBins(ek, bins, xvals(end));
+newLen = length(xvals) - 1;
 
 figure
-% plot(xvals(1:newLen),newDat);
-histogram(ek,'Normalization','pdf','DisplayStyle','stairs');
+plot(xvals(1:newLen),newDat);
+% histogram(ek,'Normalization','pdf','DisplayStyle','stairs');
 hold on
-% plot(xvals(1:newLen),yvals(1:newLen));
-plot(xvals(1:end-1),yvals(1:end-1));
+plot(xvals(1:newLen),yvals(1:newLen));
+% plot(xvals(1:end-1),yvals(1:end-1));
 xlim([-.02,.02]);
 legend('Estimation Error Data','Theoretical PDF');
 xlabel('Range');
