@@ -24,8 +24,8 @@ model_param.Fz = 1.4*Fz;
 % model_param.Q = Q;
 % R = diag([1e-6,1e-5]);
 % model_param.R = R;
-model_param.Q = diag([1e-6,3.2e-4,1e-8]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-5,2.6e-5]);
+model_param.Q = diag([1e-6,3.2e-3,1e-8]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-4,2.6e-4]);
 % BEST SO FAR
 % model_param.Q = diag([1e-6,3.2e-3,1e-8]);%diag([3.1093,274.5482,0])
 % model_param.R = diag([1e-4,2.6e-4]);
@@ -36,11 +36,11 @@ model_param.ts = 2e-3;
 % -------------------------------------------------------------------------
 % Select which mu to load measurements:
 % <<<<<<< HEAD
-% % mu = 0.80;
+% mu = 0.80;
 % =======
 % mu_list = [0.80]; % Scalar or vector
 % >>>>>>> ec356aba959104f9a337f6250981669d4d5cdd8b
-% % mu = 0.50;
+mu = 0.50;
 % mu = 0.30;
 % -------------------------------------------------------------------------
 % for mu = mu_list
@@ -90,7 +90,7 @@ t_final = t(end);
 while t_current < t_final
     
 current_i = find(t_current==t);
-if abs(s(current_i)) <= 5e-3
+if abs(s(current_i)) <= 4e-3
     % Update initial values
     mu0 = 0.3;
     states_ukf(:,current_i) = [U(current_i),w(current_i),mu0]';
