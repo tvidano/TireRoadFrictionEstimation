@@ -24,8 +24,8 @@ model_param.Fz = 1.4*Fz;
 % model_param.Q = Q;
 % R = diag([1e-6,1e-5]);
 % model_param.R = R;
-model_param.Q = diag([1e-6,3.2e-4,1e-8]);%diag([3.1093,274.5482,0])
-model_param.R = diag([1e-5,2.6e-5]);
+model_param.Q = diag([1e-5,3.2e-4,1e-6]);%diag([3.1093,274.5482,0])
+model_param.R = diag([1e-4,2.6e-4]);
 % BEST SO FAR
 % model_param.Q = diag([1e-6,3.2e-3,1e-8]);%diag([3.1093,274.5482,0])
 % model_param.R = diag([1e-4,2.6e-4]);
@@ -37,7 +37,7 @@ model_param.ts = 2e-3;
 % Select which mu to load measurements:
 % mu = 0.80;
 % mu = 0.50;
-mu = 0.30;
+% mu = 0.30;
 % -------------------------------------------------------------------------
 
 % Collect measurement data:
@@ -74,7 +74,7 @@ E_pr = eye(3);
 F_pr = eye(2);
 
 % INITIAL values
-mu0 = 0.3;
+mu0 = 0.7;
 states_ukf(:,1) = [U(1),w(1),mu0]';  % COL VEC
 var_ukf(:,:,1) = zeros(3,3);  % N x N MATRIX
 
@@ -88,7 +88,7 @@ while t_current < t_final
 current_i = find(t_current==t);
 if abs(s(current_i)) <= 5e-3
     % Update initial values
-    mu0 = 0.3;
+    mu0 = 0.7;
     states_ukf(:,current_i) = [U(current_i),w(current_i),mu0]';
     var_ukf(:,:,current_i) = zeros(3);  % N x N MATRIX
 
